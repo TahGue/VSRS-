@@ -1,0 +1,37 @@
+# VSRS Configuration File
+# Copy to vsrs.yaml and customize as needed.
+
+database:
+  url: ~/.vsrs/vsrs.db
+  echo: false
+
+sandbox:
+  use_docker: false
+  worktree_dir: ~/.vsrs/worktrees
+  network_disabled: true
+  wall_time_limit_seconds: 300
+
+model:
+  provider: openai
+  model_name: gpt-4o
+  api_key_env: OPENAI_API_KEY
+  max_tokens: 4096
+  temperature: 0.2
+
+verification:
+  max_repair_attempts: 3
+  required_gates:
+    - syntax
+    - build
+    - existing_tests
+  optional_gates:
+    - type_check
+    - lint
+    - static_analysis
+  pytest_command: pytest
+  ruff_command: ruff check
+  mypy_command: mypy
+  bandit_command: bandit -r
+
+log_dir: ~/.vsrs/logs
+log_level: INFO
