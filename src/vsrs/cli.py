@@ -62,7 +62,7 @@ def run(
     if task.suffix == ".json":
         with open(task) as f:
             task_data = json.load(f)
-        instruction = task_data.get("instruction", "")
+        instruction = task_data.get("instruction", task_data.get("description", ""))
         acceptance_criteria = task_data.get("acceptance_criteria", [])
     else:
         instruction = task.read_text()
@@ -117,7 +117,43 @@ def run(
         f"State: [yellow]intake[/yellow]",
         title="VSRS Run Started",
     ))
-    console.print(f"\nCheck status with: [dim]vsrs status {run_id}[/dim]")
+
+    # Execute pipeline
+    from vsrs.orchestrator import Orchestrator, OrchestratorConfig
+
+    console.print("\n[dim]Starting pipeline execution...[/dim]")
+    orch = Orchestrator(OrchestratorConfig())
+    try:
+        pipeline_result = orch.run(task_obj, Path(repo), repo_snapshot, run_id=run_id)
+
+        # Update persisted run with final state
+        with _get_store(config) as store:
+            store.save_run(pipeline_result.run)
+
+        final_state = pipeline_result.run.state.value
+        succeeded = pipeline_result.succeeded
+
+        if succeeded:
+            console.print(f"\n[bold green]Pipeline completed successfully![/bold green]")
+            console.print(f"  Final state: [green]{final_state}[/green]")
+            console.print(f"  Stages: {len(pipeline_result.stages)}")
+            console.print(f"  Duration: {pipeline_result.total_duration:.2f}s")
+        else:
+            console.print(f"\n[bold yellow]Pipeline finished without success.[/bold yellow]")
+            console.print(f"  Final state: [yellow]{final_state}[/yellow]")
+            console.print(f"  Stages: {len(pipeline_result.stages)}")
+            for s in pipeline_result.stages:
+                status_str = "[green]OK[/green]" if s.success else "[red]FAIL[/red]"
+                console.print(f"    {status_str} {s.stage} ({s.duration_seconds:.2f}s)")
+                if s.error:
+                    console.print(f"       [red]Error: {s.error}[/red]")
+
+        console.print(f"\nCheck status with: [dim]vsrs status {run_id}[/dim]")
+    except Exception as e:
+        console.print(f"\n[bold red]Pipeline error:[/bold red] {e}")
+        import traceback
+        console.print(f"[dim]{traceback.format_exc()}[/dim]")
+        console.print(f"\nCheck status with: [dim]vsrs status {run_id}[/dim]")
 
 
 @app.command()

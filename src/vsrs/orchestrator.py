@@ -140,6 +140,7 @@ class Orchestrator:
         task: Task,
         repo_root: Path,
         repo_snapshot: RepositorySnapshot | None = None,
+        run_id: str | None = None,
     ) -> PipelineResult:
         """Run a task through the full VSRS pipeline.
 
@@ -147,13 +148,14 @@ class Orchestrator:
             task: The task to execute.
             repo_root: Path to the repository root.
             repo_snapshot: Optional pre-created snapshot.
+            run_id: Optional pre-generated run ID. If None, a new one is generated.
 
         Returns:
             PipelineResult with all stage results and final decision.
         """
         # Create run
         run = TaskRun(
-            id=generate_run_id(),
+            id=run_id or generate_run_id(),
             task_id=task.id,
             repo_snapshot_id=repo_snapshot.id if repo_snapshot else "",
             state=TaskState.intake,
