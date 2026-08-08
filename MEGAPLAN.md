@@ -1,6 +1,6 @@
 # VSRS Megaplan: Comprehensive Project Roadmap
 
-This document covers all 15 phases of the VSRS project — completed phases as reference with key deliverables, pending phases with detailed implementation plans, and a future roadmap beyond the initial scope.
+This document covers all 15 phases of the VSRS project — all phases are complete. Completed phases are documented with key deliverables, and a future roadmap is outlined beyond the initial scope.
 
 ---
 
@@ -113,159 +113,65 @@ This document covers all 15 phases of the VSRS project — completed phases as r
 
 ---
 
-## Pending Phases (11–15)
+## Completed Phases (11–15)
 
-### Phase 11: API Server
+### Phase 11: API Server ✅
 
-**Objective**: FastAPI REST API exposing all VSRS functionality with WebSocket for live run updates.
+**Status**: Complete | **Tests**: 30+ (API)
 
-**Files to create/modify**:
-- `src/vsrs/api/app.py` — FastAPI app factory with CORS, error handlers, lifespan
-- `src/vsrs/api/routes.py` — REST endpoints
-- `src/vsrs/api/models.py` — Pydantic request/response models
-- `src/vsrs/api/deps.py` — Dependency injection (Store, Orchestrator, Config)
-- `src/vsrs/api/websocket.py` — WebSocket handler for live run updates
-- `tests/test_api.py` — API tests with TestClient
-- `pyproject.toml` — Add fastapi, uvicorn, httpx dependencies
-
-**Key endpoints**:
-```
-POST   /api/v1/runs                    Start a new task run
-GET    /api/v1/runs/{run_id}            Get run status
-GET    /api/v1/runs/{run_id}/evidence   Get evidence items
-GET    /api/v1/runs/{run_id}/diff       Get latest patch diff
-GET    /api/v1/runs/{run_id}/verify     Get verification report
-GET    /api/v1/runs/{run_id}/review     Get critic findings + decision
-GET    /api/v1/runs/{run_id}/provenance Get provenance graph
-GET    /api/v1/runs/{run_id}/report     Generate report
-GET    /api/v1/runs/{run_id}/export     Export trajectory
-GET    /api/v1/tasks/{task_id}/history  Get run history for task
-GET    /api/v1/config                   Get current config
-POST   /api/v1/config/validate          Validate config
-GET    /api/v1/benchmarks               List benchmark tasks
-WS     /api/v1/runs/{run_id}/stream     Live run updates
-```
-
-**Acceptance criteria**:
-- All endpoints return correct JSON responses
-- WebSocket streams state changes in real-time
+**Key Deliverables**:
+- `api/app.py` — FastAPI app factory with CORS, health check
+- `api/routes.py` — REST endpoints for runs, evidence, diff, verify, review, provenance, report, export, history, config, benchmarks
+- `api/models.py` — Pydantic request/response models
+- `api/deps.py` — Dependency injection for Store and Config
 - OpenAPI docs auto-generated at /docs
-- 30+ API tests passing
 
-### Phase 12: Training Data Export
+### Phase 12: Training Data Export ✅
 
-**Objective**: Full training data export pipeline with quality filters and dataset builders.
+**Status**: Complete | **Tests**: 25+ (training)
 
-**Files to modify**:
-- `src/vsrs/training/export.py` — Enhance TrajectoryExporter with provenance links, event timeline, repair decisions
-- `src/vsrs/training/filters.py` — Add advanced filters: minimality threshold, evidence quality score, repair efficiency
-- `src/vsrs/training/datasets.py` — Enhance dataset builders with token counting, train/val splits, format validators
-- `src/vsrs/training/__init__.py` — Export public API
-- `tests/test_training.py` — New tests for export, filters, datasets
+**Key Deliverables**:
+- `training/export.py` — TrajectoryExporter with provenance edges, event timeline, repair decisions, export_all
+- `training/filters.py` — TrajectoryFilter with minimality score, evidence quality, repair efficiency, advanced filter options
+- `training/datasets.py` — DatasetBuilder with token counting, train/val splits, tool-use dataset, dataset stats
+- `training/__init__.py` — Public API exports
 
-**Key features**:
-- Export full trajectory with provenance graph edges
-- Quality filters: reproducible, verified_positive, verified_negative, unresolved, has_patch, has_evidence, has_verification, minimality_score, evidence_quality
-- Dataset builders: SFT (verified-positive), repair (fail-then-success), preference (good vs bad), tool-use (task → correct query)
-- Train/validation split with deterministic seeding
-- JSONL and HuggingFace datasets format
+### Phase 13: Evaluation & Benchmarking ✅
 
-**Acceptance criteria**:
-- Export produces complete trajectory with all stages
-- Filters correctly categorize trajectories
-- Dataset builders produce valid JSONL
-- 25+ tests passing
+**Status**: Complete | **Tests**: 41 (eval)
 
-### Phase 13: Evaluation & Benchmarking
+**Key Deliverables**:
+- `eval/runner.py` — BenchmarkRunner with TaskRunner protocol, run_all/run_single, JSON/CSV export
+- `eval/scorer.py` — ScoreResult with hidden test metrics, grounding error detection, test adequacy, to_dict
+- `eval/ablations.py` — AblationHarness with run_all, comparison_table, AblationResult.from_report
+- `eval/reports.py` — EvaluationReport with CategoryBreakdown, CSV/JSON export, compare classmethod
+- `eval/tasks.py` — BenchmarkSet with seed tasks and hidden acceptance tests
 
-**Objective**: Full benchmark runner with scoring, ablation harness, and evaluation reports.
+### Phase 14: LLM Integration ✅
 
-**Files to modify**:
-- `src/vsrs/eval/runner.py` (new) — BenchmarkRunner: runs all benchmark tasks, collects results, generates reports
-- `src/vsrs/eval/scorer.py` — Enhance with hidden test execution, regression detection, grounding error detection
-- `src/vsrs/eval/ablations.py` — Implement ablation harness that disables components and re-runs
-- `src/vsrs/eval/reports.py` — Add comparison reports, per-category breakdowns, CSV/JSON export
-- `src/vsrs/eval/tasks.py` — Expand benchmark task set
-- `tests/test_eval.py` — New tests for runner, scorer, ablations, reports
+**Status**: Complete | **Tests**: 43 (LLM)
 
-**Key metrics**:
-- Verified success rate, pass@1, repair success rate
-- Regression rate, grounding error rate
-- Evidence completeness rate, patch minimality
-- Average tool calls, average duration
-- Per-category breakdowns (bugfix, feature, refactor, security)
-- Ablation comparison table
+**Key Deliverables**:
+- `llm/client.py` — Unified LLM client: StubClient, OpenAIClient, AnthropicClient, create_client factory
+- `llm/cost.py` — CostTracker and TokenUsage with per-model pricing, cost_by_model, summary, to_dict
+- `llm/prompts.py` — Prompt rendering, JSON extraction, structured output parsing, evidence formatting
+- `llm/reasoner.py` — LLMReasoner and LLMRepairReasoner with fallback to deterministic reasoners
+- `llm/__init__.py` — Public API exports
 
-**Acceptance criteria**:
-- BenchmarkRunner executes all tasks and produces EvaluationReport
-- Ablation harness correctly disables components
-- Reports include aggregate + per-task + per-category metrics
-- 20+ tests passing
+### Phase 15: Documentation & Polish ✅
 
-### Phase 14: LLM Integration
+**Status**: Complete | **Tests**: 604 total
 
-**Objective**: Integrate LLM clients (OpenAI, Anthropic) for reasoning, patch generation, and repair.
-
-**Files to create**:
-- `src/vsrs/llm/client.py` — Unified LLM client (OpenAI, Anthropic, local)
-- `src/vsrs/llm/openai_client.py` — OpenAI API client
-- `src/vsrs/llm/anthropic_client.py` — Anthropic API client
-- `src/vsrs/llm/render.py` — Prompt rendering from templates
-- `src/vsrs/llm/parse.py` — Structured JSON output parsing with validation
-- `src/vsrs/llm/cost.py` — Token/cost tracking
-- `src/vsrs/llm/__init__.py` — Public API
-
-**Files to modify**:
-- `src/vsrs/reasoning/reasoner.py` — Use LLM client for 6-stage protocol
-- `src/vsrs/repair/repair_reasoner.py` — Use LLM client for repair
-- `src/vsrs/reasoning/critic.py` — Optional LLM-assisted critic checks
-- `src/vsrs/orchestrator.py` — Wire LLM client through pipeline
-- `pyproject.toml` — Add openai, anthropic dependencies
-
-**Key features**:
-- Provider-agnostic LLM client with retry, timeout, streaming
-- Prompt template rendering with evidence formatting
-- Structured output parsing: JSON → Pydantic schema validation
-- Token/cost tracking per stage and per run
-- Fallback to stub mode when no API key configured
-- Configurable model, temperature, max_tokens
-
-**Acceptance criteria**:
-- LLM client works with OpenAI and Anthropic APIs
-- Structured output parsing validates against protocol schemas
-- Cost tracking reports tokens and estimated cost per run
-- Stub mode works without API key (existing behavior)
-- 30+ tests passing (with mocked API responses)
-
-### Phase 15: Documentation & Polish
-
-**Objective**: Complete documentation, architecture diagrams, contributor guide, and final polish.
-
-**Files to create**:
-- `docs/architecture.md` — Detailed architecture document with diagrams
-- `docs/api-reference.md` — Full API reference (once Phase 11 complete)
-- `docs/contributing.md` — Contributor guide with development setup, coding standards, PR process
-- `docs/changelog.md` — Versioned changelog
-- `docs/examples/` — Example task definitions, config files, and usage scenarios
-- `LICENSE` — MIT license file
-
-**Files to modify**:
-- `README.md` — Final polish, badge updates, link to docs
-- `pyproject.toml` — Version bump, optional dependencies groups
-- All source files — Remove TODO comments, clean up docstrings
-
-**Key deliverables**:
-- Architecture diagram (Mermaid or ASCII) showing pipeline flow
-- API reference with all endpoints, request/response schemas
-- Contributor guide: setup, test, lint, type check, PR process
-- Example gallery: 5+ example tasks with expected outputs
-- Changelog with semantic versioning
-
-**Acceptance criteria**:
-- All TODO comments resolved or tracked as issues
-- Documentation covers all modules and CLI commands
-- Examples are runnable and produce expected results
-- 100% test coverage on core modules
+**Key Deliverables**:
+- `LICENSE` — MIT license
+- `docs/architecture.md` — Pipeline diagrams, stage details, module reference
+- `docs/api-reference.md` — Full REST API reference with all endpoints
+- `docs/contributing.md` — Development setup, coding standards, PR process
+- `docs/changelog.md` — Versioned changelog (v0.1.0–v0.5.0)
+- `docs/examples/` — 5 example tasks, 4 config files, bugfix walkthrough
+- `README.md` — Updated badges, documentation links
+- `pyproject.toml` — Version 0.5.0, llm/llm-anthropic/all dependency groups
+- All TODO comments removed from source files
 
 ---
 
@@ -324,14 +230,15 @@ WS     /api/v1/runs/{run_id}/stream     Live run updates
 
 | Metric | Value |
 |--------|-------|
-| Source files | 49 Python files |
-| Source lines | ~11,000 LOC |
-| Test files | 22 test files |
-| Test count | 457 tests |
-| Modules | 10 (core, repo, reasoning, verify, repair, provenance, eval, training, api, orchestrator) |
+| Source files | 64 Python files |
+| Source lines | ~13,700 LOC |
+| Test files | 17 test files |
+| Test count | 604 tests |
+| Modules | 11 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval) |
 | CLI commands | 17+ |
-| Phases completed | 10 of 15 |
+| Phases completed | 15 of 15 |
 | Dependencies | pydantic, typer, rich, pyyaml |
+| Optional deps | fastapi, uvicorn, httpx, openai, anthropic |
 
 ---
 
@@ -340,7 +247,7 @@ WS     /api/v1/runs/{run_id}/stream     Live run updates
 | Version | Phase | Description |
 |---------|-------|-------------|
 | 0.1.0 | 1–10 | Core pipeline, CLI, provenance, config, deployment |
-| 0.2.0 | 11–12 | API server, training data export |
-| 0.3.0 | 13 | Evaluation & benchmarking |
-| 0.4.0 | 14 | LLM integration |
-| 1.0.0 | 15 | Documentation, polish, stable release |
+| 0.2.0 | 11 | API server |
+| 0.3.0 | 12 | Training data export |
+| 0.4.0 | 13 | Evaluation & benchmarking |
+| 0.5.0 | 14–15 | LLM integration, documentation, polish |
