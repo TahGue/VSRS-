@@ -23,6 +23,11 @@ dev = [
     "ruff>=0.4",
     "mypy>=1.8",
 ]
+api = [
+    "fastapi>=0.100",
+    "uvicorn>=0.24",
+    "httpx>=0.25",
+]
 
 [project.scripts]
 vsrs = "vsrs.cli:app"
