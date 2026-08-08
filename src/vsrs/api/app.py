@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from vsrs.api.routes import router
 from vsrs.api.enterprise_routes import router as enterprise_router
@@ -49,6 +53,29 @@ def create_app() -> FastAPI:
                     await websocket.send_text('{"type": "pong"}')
         except WebSocketDisconnect:
             await ws_manager.disconnect(run_id, websocket)
+
+    # Serve the web dashboard (built React app) if it exists
+    dashboard_dist = Path(__file__).resolve().parent.parent.parent.parent / "web-dashboard" / "dist"
+    if dashboard_dist.exists():
+        app.mount("/assets", StaticFiles(directory=dashboard_dist / "assets"), name="assets")
+
+        @app.get("/")
+        async def dashboard_root() -> FileResponse:
+            return FileResponse(dashboard_dist / "index.html")
+
+        @app.get("/runs/{run_id}")
+        async def dashboard_run() -> FileResponse:
+            return FileResponse(dashboard_dist / "index.html")
+
+        @app.get("/benchmarks")
+        async def dashboard_benchmarks() -> FileResponse:
+            return FileResponse(dashboard_dist / "index.html")
+
+        @app.get("/settings")
+        async def dashboard_settings() -> FileResponse:
+            return FileResponse(dashboard_dist / "index.html")
+
+        logger.info(f"Web dashboard served from {dashboard_dist}")
 
     logger.info("VSRS API app created")
     return app

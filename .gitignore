@@ -69,3 +69,5 @@ yarn-error.log*
 vscode-extension/out/
 web-dashboard/dist/
 *.vsix
+test-results/
+node_modules/
