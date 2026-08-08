@@ -8,12 +8,6 @@
     "vscode": "^1.80.0"
   },
   "categories": ["Other", "Testing", "Machine Learning"],
-  "activationEvents": [
-    "onCommand:vsrs.runVerification",
-    "onCommand:vsrs.runRepair",
-    "onCommand:vsrs.runBenchmark",
-    "onView:vsrs.tasksView"
-  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [

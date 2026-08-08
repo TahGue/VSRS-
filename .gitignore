@@ -60,3 +60,12 @@ Thumbs.db
 # Build artifacts
 *.so
 *.dylib
+
+# Node.js / TypeScript
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+vscode-extension/out/
+web-dashboard/dist/
+*.vsix
