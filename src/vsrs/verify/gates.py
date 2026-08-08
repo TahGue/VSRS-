@@ -1,7 +1,6 @@
 """Gate policy: task/risk profile selects required checks (Section 8.1).
 
 Uses the GatePolicyEngine from core.policy.
-TODO: Phase 4 - integrate with verification runner.
 """
 
 from __future__ import annotations

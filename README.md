@@ -2,9 +2,18 @@
 
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests: 457](https://img.shields.io/badge/tests-457-brightgreen.svg)](#testing)
+[![Tests: 604](https://img.shields.io/badge/tests-604-brightgreen.svg)](#testing)
 
 An evidence-grounded coding reasoning model and verification platform. Generated code is a hypothesis, not a fact — the system earns a "verified" status only through evidence: repository grounding, deterministic checks, executable tests, and an auditable provenance trail.
+
+## Documentation
+
+- [Architecture](docs/architecture.md) — Pipeline diagrams, module reference, data flow
+- [API Reference](docs/api-reference.md) — REST API endpoints with examples
+- [Contributing Guide](docs/contributing.md) — Development setup, coding standards, PR process
+- [Changelog](docs/changelog.md) — Versioned release history
+- [Examples](docs/examples/) — Sample tasks, configs, and walkthroughs
+- [Megaplan](MEGAPLAN.md) — Project roadmap and phase breakdown
 
 ## Core Thesis
 

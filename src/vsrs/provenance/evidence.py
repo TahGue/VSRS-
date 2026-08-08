@@ -2,8 +2,6 @@
 
 Core types are defined in vsrs.core.schemas.
 This module provides evidence-building utilities.
-
-TODO: Phase 2-6 - evidence collection and validation utilities.
 """
 
 from __future__ import annotations
