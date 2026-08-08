@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.2.0] - 2026-08-08
+
+### Added
+- Real-time WebSocket progress streaming
+  - ConnectionManager with pub/sub per run_id, event history with replay
+  - Event types: state_change, tool_call, verification_result, patch_generated, review_complete, run_complete
+  - WebSocket endpoint at /ws/runs/{run_id} with ping/pong support
+  - useWebSocket React hook for dashboard integration
+  - LiveProgress component: pipeline stage indicator + event feed
+  - ProvenanceGraph component: interactive SVG graph with node selection and legend
+  - Integrated into RunDetailPage
+  - 32 tests
+
+
 ## [1.1.0] - 2026-08-08
 
 ### Added

@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { api } from '../api';
+import { useRunWebSocket } from '../useWebSocket';
+import LiveProgress from '../components/LiveProgress';
+import ProvenanceGraph from '../components/ProvenanceGraph';
 import type { Run, Task, VerificationReport, Patch } from '../types';
 
 export default function RunDetailPage() {
@@ -12,6 +15,7 @@ export default function RunDetailPage() {
   const [patch, setPatch] = useState<Patch | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { events, connected } = useRunWebSocket(runId);
 
   useEffect(() => {
     if (!runId) return;
@@ -60,6 +64,8 @@ export default function RunDetailPage() {
           </tbody>
         </table>
       </div>
+
+      <LiveProgress events={events} connected={connected} />
 
       {task && (
         <div className="card">
@@ -119,6 +125,8 @@ export default function RunDetailPage() {
           </div>
         </div>
       )}
+
+      {run && <ProvenanceGraph runId={run.run_id} />}
     </div>
   );
 }

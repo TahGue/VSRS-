@@ -228,11 +228,20 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 - API proxy for dev, build output for production serving
 - 37 tests
 
-## Future Roadmap (Post-22)
+### Phase 23: Real-Time WebSocket & Provenance Graph ✅
+- WebSocket ConnectionManager with pub/sub per run_id
+- Event types: state_change, tool_call, verification_result, patch_generated, review_complete, run_complete
+- Event history with replay on connect
+- WebSocket endpoint at /ws/runs/{run_id} with ping/pong support
+- useWebSocket hook for React dashboard
+- LiveProgress component: pipeline stage indicator + event feed
+- ProvenanceGraph component: interactive SVG graph with node selection
+- Integrated into RunDetailPage
+- 32 tests
+
+## Future Roadmap (Post-23)
 
 ### Advanced Features
-- Real-time pipeline visualization via WebSocket
-- Provenance graph interactive viewer
 - Multi-tenant project isolation
 - SSO integration (SAML, OIDC)
 - Tree-sitter for structural indexing
@@ -247,10 +256,10 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 | Source files | 95+ Python files |
 | Source lines | ~24,000 LOC |
 | Test files | 24 test files |
-| Test count | 932 tests |
-| Modules | 17 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval, plugins, languages, distributed, finetuning, enterprise) + VSCode extension + Web dashboard |
+| Test count | 964 tests |
+| Modules | 18 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval, plugins, languages, distributed, finetuning, enterprise, api.websocket) + VSCode extension + Web dashboard |
 | CLI commands | 17+ |
-| Phases completed | 22 of 22 |
+| Phases completed | 23 of 23 |
 | Dependencies | pydantic, typer, rich, pyyaml |
 | Optional deps | fastapi, uvicorn, httpx, openai, anthropic |
 
@@ -271,3 +280,4 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 | 0.9.0 | 19 | Fine-tuning pipeline |
 | 1.0.0 | 20–21 | Enterprise features, VSCode extension |
 | 1.1.0 | 22 | Web UI dashboard |
+| 1.2.0 | 23 | Real-time WebSocket & provenance graph viewer |
