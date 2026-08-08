@@ -49,6 +49,13 @@ all = [
 [project.scripts]
 vsrs = "vsrs.cli:app"
 
+[project.entry-points."vsrs.plugins"]
+file-size-verifier = "vsrs.plugins.builtin:FileSizeVerifier"
+import-checker = "vsrs.plugins.builtin:ImportCheckerVerifier"
+git-log-retriever = "vsrs.plugins.builtin:GitLogRetriever"
+minimality-critic = "vsrs.plugins.builtin:MinimalityCritic"
+security-critic = "vsrs.plugins.builtin:SecurityCritic"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 

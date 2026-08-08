@@ -26,7 +26,7 @@ from vsrs.plugins.builtin import (
     MinimalityCritic,
     SecurityCritic,
 )
-from vsrs.plugins.registry import PluginRegistry, get_registry
+from vsrs.plugins.registry import PluginRegistry, get_registry, register_builtins
 
 __all__ = [
     "CriticPlugin",
@@ -42,4 +42,5 @@ __all__ = [
     "SecurityCritic",
     "VerifierPlugin",
     "get_registry",
+    "register_builtins",
 ]

@@ -192,3 +192,33 @@ def get_registry() -> PluginRegistry:
     if _registry is None:
         _registry = PluginRegistry()
     return _registry
+
+
+def register_builtins() -> int:
+    """Register all built-in plugins into the global registry.
+
+    Returns:
+        Number of plugins registered.
+    """
+    from vsrs.plugins.builtin import (
+        FileSizeVerifier,
+        GitLogRetriever,
+        ImportCheckerVerifier,
+        MinimalityCritic,
+        SecurityCritic,
+    )
+
+    reg = get_registry()
+    count = 0
+    for plugin_cls in [
+        FileSizeVerifier,
+        ImportCheckerVerifier,
+        GitLogRetriever,
+        MinimalityCritic,
+        SecurityCritic,
+    ]:
+        plugin = plugin_cls()
+        if plugin.info.name not in reg.all():
+            reg.register(plugin)
+            count += 1
+    return count
