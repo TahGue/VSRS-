@@ -82,6 +82,27 @@ class EvaluationReport:
     per_task: list[ScoreResult] = field(default_factory=list)
     _task_categories: dict[str, str] = field(default_factory=dict, repr=False)
 
+    @classmethod
+    def from_scores(
+        cls,
+        scores: list[ScoreResult],
+        categories: dict[str, str] | None = None,
+    ) -> EvaluationReport:
+        """Build an EvaluationReport from a list of ScoreResults.
+
+        Args:
+            scores: List of ScoreResult objects.
+            categories: Optional mapping of task_id -> category label.
+
+        Returns:
+            EvaluationReport with all scores aggregated.
+        """
+        report = cls()
+        for score in scores:
+            cat = categories.get(score.task_id, "") if categories else ""
+            report.add_result(score, category=cat)
+        return report
+
     @property
     def verified_success_rate(self) -> float:
         return self.verified_success_count / self.total_tasks if self.total_tasks else 0.0

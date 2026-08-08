@@ -65,6 +65,29 @@ class ScoreResult:
             "metadata": dict(self.metadata) if self.metadata else {},
         }
 
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ScoreResult:
+        """Create from dict (inverse of to_dict)."""
+        return cls(
+            task_id=data["task_id"],
+            verified_success=data.get("verified_success", False),
+            pass_at_1=data.get("pass_at_1", False),
+            repair_success=data.get("repair_success", False),
+            regression=data.get("regression", False),
+            grounding_errors=data.get("grounding_errors", 0),
+            evidence_complete=data.get("evidence_complete", False),
+            patch_minimality=data.get("patch_minimality", 1.0),
+            test_adequacy=data.get("test_adequacy", 0.0),
+            tool_calls=data.get("tool_calls", 0),
+            total_duration_seconds=data.get("total_duration_seconds", 0.0),
+            escalated=data.get("escalated", False),
+            hidden_tests_passed=data.get("hidden_tests_passed", False),
+            hidden_tests_total=data.get("hidden_tests_total", 0),
+            hidden_tests_failed=data.get("hidden_tests_failed", 0),
+            new_tests_written=data.get("new_tests_written", 0),
+            metadata=data.get("metadata", {}),
+        )
+
 
 def score_task(
     patches: list[PatchCandidate],

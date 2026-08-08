@@ -68,14 +68,14 @@ class DistributedBenchmarkRunner:
             List of job IDs.
         """
         self._job_ids = []
-        for task in self.benchmark_set.tasks:
+        for task in self.benchmark_set.all():
             job_id = f"bench_{task.id}_{uuid.uuid4().hex[:8]}"
             job = TaskJob(
                 id=job_id,
                 task_type="benchmark",
                 payload={"task_id": task.id},
                 priority=0,
-                tags=["benchmark", task.type.value if hasattr(task.type, 'value') else str(task.type)],
+                tags=["benchmark", task.task_type.value if hasattr(task.task_type, 'value') else str(task.task_type)],
             )
             self.queue.submit(job)
             self._job_ids.append(job_id)
