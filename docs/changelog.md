@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [2.3.0] - 2026-08-08
+
+### Added
+- Rate limiting & RBAC API endpoints
+  - `GET /api/v1/rate-limit/usage` — get usage stats per identifier
+  - `GET /api/v1/rate-limit/config` — get rate limit configuration
+  - `POST /api/v1/rate-limit/reset` — reset rate limits (requires `admin:all`)
+  - `GET /api/v1/roles` — list all registered roles
+  - `GET /api/v1/roles/{name}` — get role details
+  - `POST /api/v1/roles/check-permission` — check if role has permission
+  - 15 API tests
+
+
 ## [2.2.0] - 2026-08-08
 
 ### Added

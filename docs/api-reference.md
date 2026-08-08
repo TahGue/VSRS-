@@ -498,6 +498,68 @@ Query audit events with filters. **Requires valid API key.**
 
 Count total audit events. **Requires valid API key.**
 
+### Rate Limiting
+
+#### `GET /api/v1/rate-limit/usage`
+
+Get rate limit usage for an identifier. **Requires valid API key.**
+
+**Query params**: `identifier` (optional, defaults to "default")
+
+**Response**:
+```json
+{
+  "minute_used": 5,
+  "minute_limit": 60,
+  "hour_used": 100,
+  "hour_limit": 1000,
+  "burst_remaining": 8,
+  "burst_limit": 10
+}
+```
+
+#### `GET /api/v1/rate-limit/config`
+
+Get current rate limit configuration. **Requires valid API key.**
+
+#### `POST /api/v1/rate-limit/reset`
+
+Reset rate limit state. **Requires `admin:all` scope.**
+
+**Query params**: `identifier` (optional, resets all if not provided)
+
+### RBAC
+
+#### `GET /api/v1/roles`
+
+List all registered roles. **Requires valid API key.**
+
+#### `GET /api/v1/roles/{name}`
+
+Get details of a specific role. **Requires valid API key.**
+
+#### `POST /api/v1/roles/check-permission`
+
+Check if a role has a specific permission. **Requires valid API key.**
+
+**Request**:
+```json
+{
+  "role_name": "developer",
+  "permission": "task:create"
+}
+```
+
+**Response**:
+```json
+{
+  "allowed": true,
+  "role_name": "developer",
+  "permission": "task:create",
+  "resolved_permissions": ["benchmark:read", "benchmark:run", "task:create", ...]
+}
+```
+
 ---
 
 ## CLI Commands

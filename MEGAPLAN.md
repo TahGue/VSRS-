@@ -336,7 +336,17 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 - 15 API tests including integration (create → use → revoke → verify invalidation)
 - 1279 total tests
 
-## Future Roadmap (Post-33)
+### Phase 34: Rate Limiting & RBAC API Endpoints ✅
+- GET /api/v1/rate-limit/usage (per-identifier usage stats)
+- GET /api/v1/rate-limit/config (rate limit configuration)
+- POST /api/v1/rate-limit/reset (requires admin:all)
+- GET /api/v1/roles (list all roles)
+- GET /api/v1/roles/{name} (get role details, 404 if not found)
+- POST /api/v1/roles/check-permission (check role permission with resolved inheritance)
+- 15 API tests
+- 1294 total tests
+
+## Future Roadmap (Post-34)
 
 All planned phases complete. The VSRS project now includes:
 - Core pipeline with provenance tracking
@@ -359,12 +369,12 @@ All planned phases complete. The VSRS project now includes:
 |--------|-------|
 | Source files | 95+ Python files |
 | Source lines | ~24,000 LOC |
-| Test count | 1279 tests |
-| Test files | 28 test files |
+| Test count | 1294 tests |
+| Test files | 29 test files |
 | Modules | 24 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval, plugins, languages, distributed, finetuning, enterprise, api.websocket, repo.tree_sitter_index, enterprise.tenant, enterprise.sso, distributed.pool, api.enterprise_routes, api.auth) + VSCode extension + Web dashboard |
 | CLI commands | 35+ |
-| API endpoints | 31+ |
-| Phases completed | 33 of 33 |
+| API endpoints | 37+ |
+| Phases completed | 34 of 34 |
 | Dependencies | pydantic, typer, rich, pyyaml |
 | Optional deps | fastapi, uvicorn, httpx, openai, anthropic |
 
@@ -396,3 +406,4 @@ All planned phases complete. The VSRS project now includes:
 | 2.0.0 | 31 | API authentication middleware |
 | 2.1.0 | 32 | API key & audit CLI, API reference docs |
 | 2.2.0 | 33 | API key & audit management REST endpoints |
+| 2.3.0 | 34 | Rate limiting & RBAC API endpoints |

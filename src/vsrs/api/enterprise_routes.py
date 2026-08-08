@@ -11,7 +11,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from vsrs.api.auth import require_api_key, require_scope, get_key_manager, get_auditor
+from vsrs.api.auth import require_api_key, require_scope, get_key_manager, get_auditor, get_rate_limiter, get_role_manager
 from vsrs.enterprise import TenantManager, TenantNotFoundError, ResourceQuota
 from vsrs.enterprise.sso import SSOManager
 
@@ -575,3 +575,139 @@ def count_audit_events() -> AuditCountResponse:
     """Count total audit events. Requires valid API key."""
     auditor = get_auditor()
     return AuditCountResponse(count=auditor.count())
+
+
+# --- Rate Limiting endpoints ---
+
+
+class RateLimitUsageResponse(BaseModel):
+    minute_used: int
+    minute_limit: int
+    hour_used: int
+    hour_limit: int
+    burst_remaining: int
+    burst_limit: int
+
+
+class RateLimitConfigResponse(BaseModel):
+    requests_per_minute: int
+    requests_per_hour: int
+    burst_size: int
+
+
+class RateLimitResetResponse(BaseModel):
+    reset: bool
+    identifier: str | None = None
+
+
+@router.get("/rate-limit/usage", response_model=RateLimitUsageResponse, dependencies=[Depends(require_api_key)])
+def get_rate_limit_usage(identifier: str | None = None) -> RateLimitUsageResponse:
+    """Get rate limit usage for an identifier (defaults to the calling key's ID).
+
+    Requires valid API key.
+    """
+    limiter = get_rate_limiter()
+    usage = limiter.get_usage(identifier or "default")
+    return RateLimitUsageResponse(**usage)
+
+
+@router.get("/rate-limit/config", response_model=RateLimitConfigResponse, dependencies=[Depends(require_api_key)])
+def get_rate_limit_config() -> RateLimitConfigResponse:
+    """Get current rate limit configuration. Requires valid API key."""
+    limiter = get_rate_limiter()
+    cfg = limiter.config
+    return RateLimitConfigResponse(
+        requests_per_minute=cfg.requests_per_minute,
+        requests_per_hour=cfg.requests_per_hour,
+        burst_size=cfg.burst_size,
+    )
+
+
+@router.post("/rate-limit/reset", response_model=RateLimitResetResponse, dependencies=[Depends(require_scope("admin:all"))])
+def reset_rate_limit(identifier: str | None = None) -> RateLimitResetResponse:
+    """Reset rate limit state. Requires admin:all scope.
+
+    If identifier is provided, resets only that identifier.
+    Otherwise resets all rate limit state.
+    """
+    limiter = get_rate_limiter()
+    limiter.reset(identifier)
+    return RateLimitResetResponse(reset=True, identifier=identifier)
+
+
+# --- RBAC endpoints ---
+
+
+class RoleResponse(BaseModel):
+    name: str
+    description: str
+    permissions: list[str]
+    parent: str | None = None
+
+
+class RoleListResponse(BaseModel):
+    roles: list[RoleResponse]
+    count: int
+
+
+class PermissionCheckRequest(BaseModel):
+    role_name: str = Field(..., description="Role name to check")
+    permission: str = Field(..., description="Permission to check")
+
+
+class PermissionCheckResponse(BaseModel):
+    allowed: bool
+    role_name: str
+    permission: str
+    resolved_permissions: list[str]
+
+
+@router.get("/roles", response_model=RoleListResponse, dependencies=[Depends(require_api_key)])
+def list_roles() -> RoleListResponse:
+    """List all registered roles. Requires valid API key."""
+    role_mgr = get_role_manager()
+    roles = role_mgr.list_roles()
+    return RoleListResponse(
+        roles=[
+            RoleResponse(
+                name=r.name,
+                description=r.description,
+                permissions=sorted(r.permissions),
+                parent=r.parent,
+            )
+            for r in roles
+        ],
+        count=len(roles),
+    )
+
+
+@router.get("/roles/{role_name}", response_model=RoleResponse, dependencies=[Depends(require_api_key)])
+def get_role(role_name: str) -> RoleResponse:
+    """Get details of a specific role. Requires valid API key."""
+    role_mgr = get_role_manager()
+    role = role_mgr.get(role_name)
+    if role is None:
+        raise HTTPException(status_code=404, detail=f"Role not found: {role_name}")
+    return RoleResponse(
+        name=role.name,
+        description=role.description,
+        permissions=sorted(role.permissions),
+        parent=role.parent,
+    )
+
+
+@router.post("/roles/check-permission", response_model=PermissionCheckResponse, dependencies=[Depends(require_api_key)])
+def check_permission(req: PermissionCheckRequest) -> PermissionCheckResponse:
+    """Check if a role has a specific permission. Requires valid API key."""
+    role_mgr = get_role_manager()
+    role = role_mgr.get(req.role_name)
+    if role is None:
+        raise HTTPException(status_code=404, detail=f"Role not found: {req.role_name}")
+    allowed = role_mgr.check(req.role_name, req.permission)
+    resolved = role_mgr.resolve_permissions(req.role_name)
+    return PermissionCheckResponse(
+        allowed=allowed,
+        role_name=req.role_name,
+        permission=req.permission,
+        resolved_permissions=sorted(resolved),
+    )
