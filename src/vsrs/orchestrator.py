@@ -37,6 +37,7 @@ from vsrs.core.schemas import (
 )
 from vsrs.core.state import TaskStateMachine
 from vsrs.core.config import SandboxConfig
+from vsrs.core.store import Store
 from vsrs.reasoning.critic import CriticReport, ReviewService
 from vsrs.reasoning.patcher import Patcher, ValidationResult
 from vsrs.reasoning.reasoner import Reasoner
@@ -126,6 +127,7 @@ class Orchestrator:
         verification_runner: VerificationRunner | None = None,
         repair_loop: RepairLoop | None = None,
         review_service: ReviewService | None = None,
+        store: Store | None = None,
     ) -> None:
         self.config = config or OrchestratorConfig()
         self.sandbox = sandbox
@@ -134,6 +136,7 @@ class Orchestrator:
         self.verification_runner = verification_runner
         self.repair_loop = repair_loop
         self.review_service = review_service or ReviewService()
+        self.store = store
 
     def run(
         self,
@@ -183,6 +186,22 @@ class Orchestrator:
             result.succeeded = False
             return result
 
+        # Persist evidence from retrieval
+        if self.store and retrieval_result:
+            from vsrs.core.schemas import EvidenceItem, EvidenceType, EvidenceState
+            from vsrs.core.ids import generate_id
+            for item in retrieval_result.evidence:
+                ev = EvidenceItem(
+                    id=generate_id("ev"),
+                    type=EvidenceType.structural,
+                    source=item.source,
+                    locator=item.locator,
+                    content=item.content,
+                    state=EvidenceState.observed_true,
+                    metadata=item.metadata,
+                )
+                self.store.save_evidence(ev, task.id)
+
         # Stage 3: Reason
         stage, reasoning_output = self._stage_reason(
             task, retrieval_result, run, sm,
@@ -206,6 +225,10 @@ class Orchestrator:
             result.succeeded = False
             return result
 
+        # Persist patch
+        if self.store and patch:
+            self.store.save_patch(patch)
+
         # Stage 5: Verify
         stage, verification_report, worktree = self._stage_verify(
             task, patch, repo_root, run, sm,
@@ -216,6 +239,10 @@ class Orchestrator:
             run.state = TaskState.failed
             result.succeeded = False
             return result
+
+        # Persist verification report
+        if self.store and verification_report:
+            self.store.save_verification_report(verification_report)
 
         # Stage 6: Repair (if needed)
         if verification_report and not verification_report.required_passed:
@@ -244,6 +271,15 @@ class Orchestrator:
         result.critic_report = critic_report
         result.final_decision = decision
         run.final_decision = decision
+
+        # Persist critic findings and final decision
+        if self.store:
+            if critic_report:
+                for finding in critic_report.findings:
+                    self.store.save_finding(finding)
+            if decision:
+                self.store.save_final_decision(decision)
+            self.store.save_run(run)
 
         # Set final state
         if decision and decision.status == FinalStatus.verified_candidate:
