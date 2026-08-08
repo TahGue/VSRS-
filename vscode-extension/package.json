@@ -1,0 +1,181 @@
+{
+  "name": "vsrs-vscode",
+  "displayName": "VSRS - Verified Self-Repair System",
+  "description": "Run verification, repair, and benchmark tasks directly in VSCode",
+  "version": "0.1.0",
+  "publisher": "vsrs",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": ["Other", "Testing", "Machine Learning"],
+  "activationEvents": [
+    "onCommand:vsrs.runVerification",
+    "onCommand:vsrs.runRepair",
+    "onCommand:vsrs.runBenchmark",
+    "onView:vsrs.tasksView"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vsrs.runVerification",
+        "title": "VSRS: Run Verification",
+        "icon": "$(check)"
+      },
+      {
+        "command": "vsrs.runRepair",
+        "title": "VSRS: Run Repair",
+        "icon": "$(wrench)"
+      },
+      {
+        "command": "vsrs.runBenchmark",
+        "title": "VSRS: Run Benchmark",
+        "icon": "$(beaker)"
+      },
+      {
+        "command": "vsrs.viewResults",
+        "title": "VSRS: View Results",
+        "icon": "$(output)"
+      },
+      {
+        "command": "vsrs.connectServer",
+        "title": "VSRS: Connect to Server",
+        "icon": "$(plug)"
+      },
+      {
+        "command": "vsrs.disconnectServer",
+        "title": "VSRS: Disconnect from Server",
+        "icon": "$(debug-disconnect)"
+      },
+      {
+        "command": "vsrs.refreshTasks",
+        "title": "VSRS: Refresh Tasks",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "vsrs.viewTaskDetails",
+        "title": "VSRS: View Task Details",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "vsrs.cancelTask",
+        "title": "VSRS: Cancel Task",
+        "icon": "$(close)"
+      },
+      {
+        "command": "vsrs.showSettings",
+        "title": "VSRS: Show Settings",
+        "icon": "$(gear)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "vsrs-sidebar",
+          "title": "VSRS",
+          "icon": "media/vsrs-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "vsrs-sidebar": [
+        {
+          "id": "vsrs.tasksView",
+          "name": "Tasks",
+          "icon": "$(list-tree)"
+        },
+        {
+          "id": "vsrs.resultsView",
+          "name": "Results",
+          "icon": "$(output)"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "vsrs.refreshTasks",
+          "when": "view == vsrs.tasksView",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "vsrs.viewTaskDetails",
+          "when": "view == vsrs.tasksView && viewItem == task",
+          "group": "inline"
+        },
+        {
+          "command": "vsrs.cancelTask",
+          "when": "view == vsrs.tasksView && viewItem == task-running",
+          "group": "inline"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "VSRS",
+      "properties": {
+        "vsrs.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:8000",
+          "description": "URL of the VSRS API server"
+        },
+        "vsrs.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for authentication"
+        },
+        "vsrs.autoRunVerification": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically run verification after saving a file"
+        },
+        "vsrs.maxAttempts": {
+          "type": "number",
+          "default": 3,
+          "description": "Maximum repair attempts"
+        },
+        "vsrs.timeout": {
+          "type": "number",
+          "default": 300,
+          "description": "Timeout in seconds for operations"
+        },
+        "vsrs.requiredGates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ["syntax", "build", "existing_tests"],
+          "description": "Required verification gates"
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "vsrs.runVerification",
+        "key": "ctrl+shift+v",
+        "mac": "cmd+shift+v"
+      },
+      {
+        "command": "vsrs.runRepair",
+        "key": "ctrl+shift+r",
+        "mac": "cmd+shift+r"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@types/node": "^20.0.0",
+    "@types/mocha": "^10.0.0",
+    "typescript": "^5.3.0",
+    "mocha": "^10.2.0",
+    "@vscode/test-electron": "^2.3.0"
+  },
+  "dependencies": {}
+}
