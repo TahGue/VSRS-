@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
-from vsrs.core.ids import generate_run_id, generate_patch_id
+from vsrs.core.ids import generate_run_id, generate_patch_id, generate_id
 from vsrs.core.logging import get_logger
 from vsrs.core.schemas import (
     CheckResult,
@@ -30,13 +30,14 @@ from vsrs.core.schemas import (
     FinalStatus,
     PatchCandidate,
     RepositorySnapshot,
+    RunEvent,
     Task,
     TaskRun,
     TaskState,
     VerificationReport,
 )
 from vsrs.core.state import TaskStateMachine
-from vsrs.core.config import SandboxConfig
+from vsrs.core.config import SandboxConfig, VSRSConfig
 from vsrs.core.store import Store
 from vsrs.reasoning.critic import CriticReport, ReviewService
 from vsrs.reasoning.patcher import Patcher, ValidationResult
@@ -44,6 +45,7 @@ from vsrs.reasoning.reasoner import Reasoner
 from vsrs.reasoning.protocol import ReasoningOutput
 from vsrs.repair.categorizer import FailureCategorizer
 from vsrs.repair.loop import RepairLoop, RepairResult
+from vsrs.repair.repair_reasoner import RepairReasoner
 from vsrs.repo.intelligence import RepositoryIntelligence, RepositoryModel
 from vsrs.repo.retrieval import RetrievalResult
 from vsrs.verify.runner import VerificationConfig, VerificationRunner
@@ -128,15 +130,90 @@ class Orchestrator:
         repair_loop: RepairLoop | None = None,
         review_service: ReviewService | None = None,
         store: Store | None = None,
+        vsrs_config: VSRSConfig | None = None,
+        ws_manager=None,
     ) -> None:
         self.config = config or OrchestratorConfig()
         self.sandbox = sandbox
-        self.reasoner = reasoner or Reasoner()
         self.patcher = patcher or Patcher()
         self.verification_runner = verification_runner
         self.repair_loop = repair_loop
         self.review_service = review_service or ReviewService()
         self.store = store
+        self.ws_manager = ws_manager
+
+        # Wire LLM if vsrs_config provides a non-stub provider
+        self._llm_client = None
+        if vsrs_config and vsrs_config.model.provider not in ("stub", "", None):
+            try:
+                from vsrs.llm.client import create_client
+                from vsrs.llm.reasoner import LLMReasoner, LLMRepairReasoner
+                from vsrs.llm.cost import CostTracker
+
+                cost_tracker = CostTracker()
+                self._llm_client = create_client(
+                    provider=vsrs_config.model.provider,
+                    model=vsrs_config.model.model_name or None,
+                    base_url=vsrs_config.model.base_url,
+                    cost_tracker=cost_tracker,
+                )
+                logger.info(f"LLM client created: provider={vsrs_config.model.provider}")
+
+                # Wrap deterministic reasoner with LLM reasoner
+                fallback = reasoner or Reasoner()
+                self.reasoner = LLMReasoner(
+                    client=self._llm_client,
+                    fallback_reasoner=fallback,
+                    cost_tracker=cost_tracker,
+                )
+                # Also create LLM repair reasoner for the repair loop
+                self._llm_repair_reasoner = LLMRepairReasoner(
+                    client=self._llm_client,
+                    cost_tracker=cost_tracker,
+                )
+            except Exception as e:
+                logger.warning(f"Failed to initialize LLM client: {e}. Using deterministic reasoner.")
+                self.reasoner = reasoner or Reasoner()
+                self._llm_repair_reasoner = None
+        else:
+            self.reasoner = reasoner or Reasoner()
+            self._llm_repair_reasoner = None
+
+    def _emit_event(
+        self,
+        run: TaskRun,
+        event_type: str,
+        payload: dict | None = None,
+    ) -> None:
+        """Emit a run event: persist to store and publish via WebSocket."""
+        event = RunEvent(
+            id=generate_id("evt"),
+            run_id=run.id,
+            task_id=run.task_id,
+            state=run.state,
+            event_type=event_type,
+            payload=payload or {},
+        )
+        if self.store:
+            self.store.save_event(event)
+        if self.ws_manager:
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    asyncio.ensure_future(self.ws_manager.broadcast(run.id, {
+                        "type": event_type,
+                        "state": run.state.value,
+                        **(payload or {}),
+                    }))
+                else:
+                    loop.run_until_complete(self.ws_manager.broadcast(run.id, {
+                        "type": event_type,
+                        "state": run.state.value,
+                        **(payload or {}),
+                    }))
+            except Exception:
+                pass
 
     def run(
         self,
@@ -171,6 +248,7 @@ class Orchestrator:
         # Stage 1: Intake
         stage = self._stage_intake(task, repo_root, repo_snapshot, run, sm)
         result.stages.append(stage)
+        self._emit_event(run, "state_change", {"from_state": "intake", "to_state": run.state.value})
         if not stage.success:
             run.state = TaskState.failed
             result.succeeded = False
@@ -181,6 +259,7 @@ class Orchestrator:
             task, repo_root, run, sm,
         )
         result.stages.append(stage)
+        self._emit_event(run, "state_change", {"from_state": "retrieving", "to_state": run.state.value})
         if not stage.success:
             run.state = TaskState.failed
             result.succeeded = False
@@ -208,6 +287,7 @@ class Orchestrator:
         )
         result.stages.append(stage)
         result.reasoning_output = reasoning_output
+        self._emit_event(run, "state_change", {"from_state": "reasoning", "to_state": run.state.value})
         if not stage.success:
             run.state = TaskState.failed
             result.succeeded = False
@@ -220,6 +300,11 @@ class Orchestrator:
         result.stages.append(stage)
         result.patch = patch
         result.patch_validation = validation
+        if patch:
+            self._emit_event(run, "patch_generated", {
+                "patch_id": patch.id,
+                "changed_files": patch.changed_files,
+            })
         if not stage.success:
             run.state = TaskState.failed
             result.succeeded = False
@@ -235,6 +320,11 @@ class Orchestrator:
         )
         result.stages.append(stage)
         result.verification_report = verification_report
+        if verification_report:
+            self._emit_event(run, "verification_result", {
+                "required_passed": verification_report.required_passed,
+                "checks": len(verification_report.checks),
+            })
         if not stage.success and verification_report is None:
             run.state = TaskState.failed
             result.succeeded = False
@@ -271,6 +361,11 @@ class Orchestrator:
         result.critic_report = critic_report
         result.final_decision = decision
         run.final_decision = decision
+        if decision:
+            self._emit_event(run, "review_complete", {
+                "decision": decision.status.value,
+                "findings_count": len(critic_report.findings) if critic_report else 0,
+            })
 
         # Persist critic findings and final decision
         if self.store:
@@ -294,6 +389,24 @@ class Orchestrator:
 
         run.finished_at = datetime.now(timezone.utc)
         run.updated_at = datetime.now(timezone.utc)
+
+        # Build and persist provenance graph
+        if self.store:
+            try:
+                from vsrs.provenance.store import ProvenanceStore
+                from vsrs.provenance.graph import EvidenceGraph
+                prov_store = ProvenanceStore(self.store)
+                graph = EvidenceGraph(prov_store)
+                graph.build_from_pipeline(result, reasoning_output)
+                logger.info(f"Provenance graph built for run {run.id}")
+            except Exception as e:
+                logger.warning(f"Failed to build provenance graph: {e}")
+
+        # Emit completion event
+        self._emit_event(run, "run_complete", {
+            "final_state": run.state.value,
+            "succeeded": result.succeeded,
+        })
 
         # Cleanup worktree
         if self.config.cleanup_worktree and worktree and self.sandbox:

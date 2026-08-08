@@ -214,9 +214,12 @@ class TestBackwardCompat:
         assert resp.json()["status"] == "ok"
 
     def test_existing_runs_endpoint(self, client):
-        # /runs only has POST, so a GET should return 405 (method exists)
+        # GET /runs now returns a paginated list
         resp = client.get("/api/v1/runs")
-        assert resp.status_code == 405
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "runs" in data
+        assert "total" in data
 
     def test_existing_benchmarks_endpoint(self, client):
         resp = client.get("/api/v1/benchmarks")

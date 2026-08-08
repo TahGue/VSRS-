@@ -45,9 +45,9 @@ class SandboxConfig:
 class ModelConfig:
     """Model interface settings."""
 
-    provider: str = "openai"
-    model_name: str = "gpt-4o"
-    api_key_env: str = "OPENAI_API_KEY"
+    provider: str = "stub"
+    model_name: str = ""
+    api_key_env: str = ""
     base_url: str | None = None
     max_tokens: int = 4096
     temperature: float = 0.2

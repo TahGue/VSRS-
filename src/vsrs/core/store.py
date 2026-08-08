@@ -357,6 +357,31 @@ class Store:
             ))
         return runs
 
+    def list_all_runs(self, limit: int = 100, offset: int = 0) -> list[TaskRun]:
+        """List all runs, most recent first, with pagination."""
+        rows = self._conn.execute(
+            "SELECT * FROM task_runs ORDER BY started_at DESC LIMIT ? OFFSET ?",
+            (limit, offset),
+        ).fetchall()
+        runs = []
+        for row in rows:
+            fd = None
+            if row["final_decision"]:
+                fd = FinalDecision.model_validate_json(row["final_decision"])
+            runs.append(TaskRun(
+                id=row["id"], task_id=row["task_id"], repo_snapshot_id=row["repo_snapshot_id"],
+                state=row["state"], attempt_no=row["attempt_no"], max_attempts=row["max_attempts"],
+                started_at=row["started_at"], updated_at=row["updated_at"],
+                finished_at=row["finished_at"], worktree_path=row["worktree_path"],
+                final_decision=fd,
+            ))
+        return runs
+
+    def count_runs(self) -> int:
+        """Count total runs in the store."""
+        row = self._conn.execute("SELECT COUNT(*) as cnt FROM task_runs").fetchone()
+        return row["cnt"]
+
     # --- EvidenceItem ---
 
     def save_evidence(self, item: EvidenceItem, task_id: str) -> None:

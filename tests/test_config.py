@@ -25,7 +25,7 @@ class TestVSRSConfigDefaults:
         config = VSRSConfig()
         assert config.database.url
         assert config.log_level == "INFO"
-        assert config.model.provider == "openai"
+        assert config.model.provider == "stub"
         assert config.sandbox.use_docker is False
 
     def test_default_with_env_overrides(self, monkeypatch):
@@ -65,7 +65,7 @@ class TestVSRSConfigFromDict:
         config = VSRSConfig.from_dict(data)
         assert config.log_level == "ERROR"
         # Other fields remain default
-        assert config.model.provider == "openai"
+        assert config.model.provider == "stub"
 
     def test_from_dict_empty(self):
         config = VSRSConfig.from_dict({})

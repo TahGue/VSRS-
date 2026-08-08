@@ -102,12 +102,32 @@ test.describe('VSRS Web Dashboard', () => {
     expect(text).toContain('Swagger');
   });
 
+  test('GET /runs returns paginated list', async ({ request }) => {
+    const res = await request.get(`${BASE_URL}/api/v1/runs`);
+    expect(res.ok()).toBeTruthy();
+    const data = await res.json();
+    expect(data).toHaveProperty('runs');
+    expect(data).toHaveProperty('total');
+    expect(data).toHaveProperty('offset');
+    expect(data).toHaveProperty('limit');
+    expect(Array.isArray(data.runs)).toBeTruthy();
+  });
+
+  test('GET /runs supports pagination params', async ({ request }) => {
+    const res = await request.get(`${BASE_URL}/api/v1/runs?offset=0&limit=5`);
+    expect(res.ok()).toBeTruthy();
+    const data = await res.json();
+    expect(data.limit).toBe(5);
+    expect(data.offset).toBe(0);
+    expect(data.runs.length).toBeLessThanOrEqual(5);
+  });
+
   test('OpenAPI schema has correct version', async ({ request }) => {
     const res = await request.get(`${BASE_URL}/openapi.json`);
     expect(res.ok()).toBeTruthy();
     const schema = await res.json();
     expect(schema.info.title).toBe('VSRS API');
-    expect(schema.info.version).toBe('2.4.0');
+    expect(schema.info.version).toBe('2.5.0');
   });
 
   test('enterprise endpoints exist in OpenAPI schema', async ({ request }) => {

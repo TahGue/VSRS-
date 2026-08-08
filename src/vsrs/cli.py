@@ -123,7 +123,7 @@ def run(
 
     console.print("\n[dim]Starting pipeline execution...[/dim]")
     with _get_store(config) as store:
-        orch = Orchestrator(OrchestratorConfig(), store=store)
+        orch = Orchestrator(OrchestratorConfig(), store=store, vsrs_config=config)
         try:
             pipeline_result = orch.run(task_obj, Path(repo), repo_snapshot, run_id=run_id)
 

@@ -28,6 +28,15 @@ class RunResponse(BaseModel):
     max_attempts: int
 
 
+class RunListResponse(BaseModel):
+    """Paginated list of runs."""
+
+    runs: list[dict[str, Any]] = Field(default_factory=list)
+    total: int = 0
+    offset: int = 0
+    limit: int = 100
+
+
 class TaskResponse(BaseModel):
     """Response for a task."""
 

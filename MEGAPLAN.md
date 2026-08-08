@@ -353,12 +353,30 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 - 21 tests (15 CLI + 6 pagination)
 - 1315 total tests
 
-## Future Roadmap (Post-35)
+### Phase 36: LM Studio Integration & Full Pipeline Wiring ✅
+- LM Studio LLM provider (`LMStudioClient`) — OpenAI-compatible at `localhost:1234/v1`
+  - Auto-detection of loaded models via `/v1/models`
+  - `create_client(provider="lmstudio")` factory support
+- LLM wired into Orchestrator via `vsrs_config` parameter
+  - `LLMReasoner` and `LLMRepairReasoner` used when provider ≠ `stub`
+  - Graceful fallback to deterministic reasoner on errors
+- API `POST /runs` now executes the pipeline (was just saving)
+- `GET /api/v1/runs` list endpoint with pagination
+- `Store.list_all_runs()` and `Store.count_runs()`
+- RunEvent emission at each stage transition (persisted + WebSocket)
+- Provenance graph built and persisted after pipeline run
+- WebSocket live updates wired to Orchestrator
+- Docker multi-stage build + `docker-compose.yml` for LM Studio
+- Web dashboard served from FastAPI (static files mount)
+- 14 Playwright E2E tests + 2 new API tests
+- 1317 total tests
+
+## Future Roadmap (Post-36)
 
 All planned phases complete. The VSRS project now includes:
 - Core pipeline with provenance tracking
 - Repository intelligence with tree-sitter multi-language indexing
-- LLM-powered reasoning, verification, repair, and review
+- LLM-powered reasoning, verification, repair, and review (LM Studio, OpenAI, Anthropic)
 - Web dashboard with real-time WebSocket streaming
 - VSCode extension
 - Enterprise features: RBAC, audit logging, API keys, rate limiting
@@ -367,6 +385,7 @@ All planned phases complete. The VSRS project now includes:
 - Distributed execution with worker pool auto-scaling
 - Training data export, fine-tuning, evaluation, and benchmarking
 - Plugin system and multi-language support
+- Docker deployment with LM Studio support
 
 ---
 
@@ -375,13 +394,13 @@ All planned phases complete. The VSRS project now includes:
 | Metric | Value |
 |--------|-------|
 | Source files | 95+ Python files |
-| Source lines | ~24,000 LOC |
-| Test count | 1315 tests |
-| Test files | 30 test files |
+| Source lines | ~24,500 LOC |
+| Test count | 1317 Python tests + 14 Playwright E2E tests |
+| Test files | 30 test files + 1 E2E spec |
 | Modules | 24 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval, plugins, languages, distributed, finetuning, enterprise, api.websocket, repo.tree_sitter_index, enterprise.tenant, enterprise.sso, distributed.pool, api.enterprise_routes, api.auth) + VSCode extension + Web dashboard |
 | CLI commands | 43+ |
-| API endpoints | 37+ |
-| Phases completed | 35 of 35 |
+| API endpoints | 38+ |
+| Phases completed | 36 of 36 |
 | Dependencies | pydantic, typer, rich, pyyaml |
 | Optional deps | fastapi, uvicorn, httpx, openai, anthropic |
 
@@ -415,3 +434,4 @@ All planned phases complete. The VSRS project now includes:
 | 2.2.0 | 33 | API key & audit management REST endpoints |
 | 2.3.0 | 34 | Rate limiting & RBAC API endpoints |
 | 2.4.0 | 35 | Role & rate limit CLI + API pagination |
+| 2.5.0 | 36 | LM Studio integration, full pipeline wiring, Docker, E2E tests |

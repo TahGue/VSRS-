@@ -8,6 +8,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [2.5.0] - 2026-08-08
+
+### Added
+- LM Studio LLM provider
+  - `LMStudioClient` — OpenAI-compatible client for local LM Studio server at `localhost:1234/v1`
+  - Auto-detection of loaded models via `/v1/models` endpoint
+  - `create_client(provider="lmstudio")` factory support
+  - `vsrs.lmstudio.yaml` config file for quick setup
+- LLM wired into Orchestrator
+  - `Orchestrator.__init__` accepts `vsrs_config` and `ws_manager` parameters
+  - Creates `LLMReasoner` and `LLMRepairReasoner` when provider is not `stub`
+  - Graceful fallback to deterministic reasoner on LLM errors
+- `GET /api/v1/runs` list endpoint with pagination (`offset`, `limit`, `total`)
+- `Store.list_all_runs()` and `Store.count_runs()` methods
+- `RunListResponse` Pydantic model
+- RunEvent emission at each pipeline stage transition
+  - Events persisted to store via `store.save_event()`
+  - Events published via WebSocket `ws_manager.broadcast()`
+- Provenance graph built and persisted after pipeline completion
+  - `EvidenceGraph.build_from_pipeline()` called in Orchestrator
+- WebSocket live updates wired to Orchestrator
+  - `ws_manager` passed to Orchestrator, publishes state changes, patch, verification, review, and completion events
+- Docker multi-stage build (Node.js dashboard build + Python runtime)
+- `docker-compose.yml` with `host.docker.internal` for LM Studio access
+- Web dashboard served from FastAPI (static files mount)
+- 14 Playwright E2E tests (dashboard UI + API endpoints)
+- 2 new API tests (list runs, pagination)
+
+### Changed
+- `ModelConfig` default provider changed from `openai` to `stub` (safe default)
+- `POST /api/v1/runs` now executes the pipeline synchronously (was just saving)
+- `api.ts` `listRuns()` extracts `.runs` from paginated response
+- `Dockerfile` now multi-stage: builds dashboard, serves API+dashboard on port 8000
+
+### Fixed
+- API `POST /runs` was not calling the Orchestrator — runs stayed in `intake` forever
+- No `GET /runs` list endpoint — dashboard runs page always got 405 error
+- Provenance graph never built — reports showed 0 edges, 0 nodes
+- RunEvents never emitted — reports showed 0 events
+- WebSocket never received pipeline events — LiveProgress component never updated
+
+
 ## [2.4.0] - 2026-08-08
 
 ### Added

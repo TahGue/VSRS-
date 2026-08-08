@@ -21,6 +21,7 @@ from vsrs.api.models import (
     ProvenanceResponse,
     ReportResponse,
     ReviewResponse,
+    RunListResponse,
     RunRequest,
     RunResponse,
     TaskResponse,
@@ -52,9 +53,30 @@ def _require_run(store: Store, run_id: str):
 # --- Runs ---
 
 
+@router.get("/runs", response_model=RunListResponse)
+def list_runs(
+    offset: int = Query(0, ge=0, description="Pagination offset"),
+    limit: int = Query(100, ge=1, le=1000, description="Page size"),
+    store: Store = Depends(get_store),
+) -> RunListResponse:
+    """List all runs with pagination."""
+    runs = store.list_all_runs(limit=limit, offset=offset)
+    total = store.count_runs()
+    return RunListResponse(
+        runs=[r.model_dump(mode="json") for r in runs],
+        total=total,
+        offset=offset,
+        limit=limit,
+    )
+
+
 @router.post("/runs", response_model=RunResponse)
-def create_run(req: RunRequest, store: Store = Depends(get_store)) -> RunResponse:
-    """Start a new task run."""
+def create_run(
+    req: RunRequest,
+    store: Store = Depends(get_store),
+    config: VSRSConfig = Depends(get_config),
+) -> RunResponse:
+    """Start a new task run and execute the pipeline."""
     import subprocess
     from pathlib import Path
 
@@ -95,13 +117,26 @@ def create_run(req: RunRequest, store: Store = Depends(get_store)) -> RunRespons
     store.save_task(task)
     store.save_run(run)
 
+    # Execute pipeline
+    from vsrs.orchestrator import Orchestrator, OrchestratorConfig
+    from vsrs.api.websocket import manager as ws_manager
+
+    orch = Orchestrator(
+        OrchestratorConfig(),
+        store=store,
+        vsrs_config=config,
+        ws_manager=ws_manager,
+    )
+    pipeline_result = orch.run(task, repo_path, repo_snapshot, run_id=run_id)
+    store.save_run(pipeline_result.run)
+
     return RunResponse(
-        run_id=run.id,
+        run_id=pipeline_result.run.id,
         task_id=task.id,
-        state=run.state.value,
-        started_at=str(run.started_at),
-        attempt_no=run.attempt_no,
-        max_attempts=run.max_attempts,
+        state=pipeline_result.run.state.value,
+        started_at=str(pipeline_result.run.started_at),
+        attempt_no=pipeline_result.run.attempt_no,
+        max_attempts=pipeline_result.run.max_attempts,
     )
 
 

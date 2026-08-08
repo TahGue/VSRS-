@@ -1,0 +1,27 @@
+# VSRS Configuration for LM Studio
+#
+# 1. Install LM Studio: https://lmstudio.ai
+# 2. Download a model (e.g., Qwen2.5-Coder-7B, Llama-3.1-8B-Instruct)
+# 3. Start the local server in LM Studio (Developer tab → Start Server)
+# 4. Use this config: vsrs run --repo . --task task.json --config vsrs.lmstudio.yaml
+
+database:
+  url: ~/.vsrs/vsrs.db
+
+model:
+  provider: lmstudio
+  model_name: ""  # auto-detect from LM Studio
+  base_url: http://localhost:1234/v1
+  max_tokens: 4096
+  temperature: 0.2
+
+sandbox:
+  use_docker: false
+  network_disabled: false  # LM Studio needs network access
+
+verification:
+  max_repair_attempts: 3
+  required_gates: [syntax, build, existing_tests]
+  optional_gates: [type_check, lint, static_analysis]
+
+log_level: INFO

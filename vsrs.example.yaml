@@ -12,9 +12,15 @@ sandbox:
   wall_time_limit_seconds: 300
 
 model:
-  provider: openai
-  model_name: gpt-4o
-  api_key_env: OPENAI_API_KEY
+  # Providers: stub (default, no LLM), openai, anthropic, lmstudio
+  # For LM Studio: start local server in LM Studio app, then use:
+  #   provider: lmstudio
+  #   base_url: http://localhost:1234/v1
+  #   model_name: ""  (auto-detect)
+  provider: stub
+  model_name: ""
+  api_key_env: ""
+  base_url: null
   max_tokens: 4096
   temperature: 0.2
 

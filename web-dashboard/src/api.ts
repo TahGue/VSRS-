@@ -15,7 +15,10 @@ async function request<T>(method: string, path: string, body?: any): Promise<T> 
 
 export const api = {
   health: () => request<{ status: string }>('GET', '/health'.replace('/api/v1', '')),
-  listRuns: () => request<any[]>('GET', '/runs'),
+  listRuns: async () => {
+    const res = await request<{ runs: any[]; total: number; offset: number; limit: number }>('GET', '/runs');
+    return res.runs;
+  },
   createRun: (data: { repo_path: string; task_instruction: string; task_type: string }) =>
     request<any>('POST', '/runs', data),
   getRun: (id: string) => request<any>('GET', `/runs/${id}`),

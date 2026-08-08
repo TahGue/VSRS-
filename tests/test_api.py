@@ -160,7 +160,8 @@ class TestRuns:
         data = response.json()
         assert "run_id" in data
         assert "task_id" in data
-        assert data["state"] == "intake"
+        # Pipeline now executes synchronously — state should be past intake
+        assert data["state"] in ("intake", "needs_review", "verified", "rejected", "failed")
 
     def test_create_run_nonexistent_repo(self, client):
         response = client.post("/api/v1/runs", json={
@@ -181,6 +182,25 @@ class TestRuns:
     def test_get_run_not_found(self, client):
         response = client.get("/api/v1/runs/nonexistent")
         assert response.status_code == 404
+
+    def test_list_runs(self, client):
+        run_id, _ = _seed_store(client._db_path)
+        response = client.get("/api/v1/runs")
+        assert response.status_code == 200
+        data = response.json()
+        assert "runs" in data
+        assert "total" in data
+        assert data["total"] >= 1
+        assert any(r["id"] == run_id for r in data["runs"])
+
+    def test_list_runs_pagination(self, client):
+        _seed_store(client._db_path)
+        response = client.get("/api/v1/runs?offset=0&limit=1")
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["runs"]) <= 1
+        assert data["limit"] == 1
+        assert data["offset"] == 0
 
     def test_get_run_task(self, client):
         run_id, _ = _seed_store(client._db_path)

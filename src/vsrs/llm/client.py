@@ -258,6 +258,76 @@ class AnthropicClient:
         return result
 
 
+class LMStudioClient:
+    """LM Studio client using OpenAI-compatible API.
+
+    LM Studio runs a local server at http://localhost:1234/v1 that is
+    fully OpenAI API compatible. This client wraps OpenAIClient with
+    sensible defaults and auto-detection of loaded models.
+
+    Requires the `openai` package (pip install openai).
+    """
+
+    DEFAULT_BASE_URL = "http://localhost:1234/v1"
+    DEFAULT_MODEL = "local-model"
+
+    def __init__(
+        self,
+        model: str | None = None,
+        base_url: str | None = None,
+        api_key: str = "lm-studio",
+        cost_tracker: CostTracker | None = None,
+    ) -> None:
+        self.base_url = base_url or os.environ.get(
+            "LMSTUDIO_BASE_URL", self.DEFAULT_BASE_URL
+        )
+        self.cost_tracker = cost_tracker
+        self._model = model
+        self._client = OpenAIClient(
+            model=model or self.DEFAULT_MODEL,
+            api_key=api_key,
+            base_url=self.base_url,
+            cost_tracker=cost_tracker,
+        )
+
+    @property
+    def model(self) -> str:
+        return self._client.model
+
+    def list_models(self) -> list[str]:
+        """List available models from LM Studio."""
+        try:
+            from openai import OpenAI
+        except ImportError:
+            return []
+        client = OpenAI(api_key="lm-studio", base_url=self.base_url)
+        try:
+            models = client.models.list()
+            return [m.id for m in models.data]
+        except Exception:
+            return []
+
+    def complete(
+        self,
+        prompt: str,
+        *,
+        system: str = "",
+        max_tokens: int = 4096,
+        temperature: float = 0.2,
+        **kwargs: Any,
+    ) -> LLMResponse:
+        """Generate a completion via LM Studio."""
+        if self._model is None:
+            models = self.list_models()
+            if models:
+                self._client.model = models[0]
+                logger.info(f"LM Studio auto-selected model: {models[0]}")
+        return self._client.complete(
+            prompt, system=system, max_tokens=max_tokens,
+            temperature=temperature, **kwargs,
+        )
+
+
 def create_client(
     provider: str = "stub",
     model: str | None = None,
@@ -268,7 +338,7 @@ def create_client(
     """Factory function to create an LLM client by provider name.
 
     Args:
-        provider: One of 'stub', 'openai', 'anthropic'.
+        provider: One of 'stub', 'openai', 'anthropic', 'lmstudio'.
         model: Model name. Defaults to provider's default.
         api_key: API key. Falls back to environment variable.
         base_url: Optional base URL override.
@@ -293,5 +363,14 @@ def create_client(
             base_url=base_url,
             cost_tracker=cost_tracker,
         )
+    elif provider == "lmstudio":
+        return LMStudioClient(
+            model=model,
+            base_url=base_url,
+            cost_tracker=cost_tracker,
+        )
     else:
-        raise ValueError(f"Unknown LLM provider: {provider}. Use 'stub', 'openai', or 'anthropic'.")
+        raise ValueError(
+            f"Unknown LLM provider: {provider}. "
+            "Use 'stub', 'openai', 'anthropic', or 'lmstudio'."
+        )

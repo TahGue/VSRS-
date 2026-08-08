@@ -1,0 +1,21 @@
+services:
+  vsrs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - vsrs-data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - VSRS_DB_PATH=/data/vsrs.db
+      - VSRS_MODEL_PROVIDER=lmstudio
+      - VSRS_MODEL_BASE_URL=http://host.docker.internal:1234/v1
+      - VSRS_LOG_LEVEL=INFO
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+volumes:
+  vsrs-data:
