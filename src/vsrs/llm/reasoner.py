@@ -104,7 +104,7 @@ class LLMReasoner:
             {
                 "type": ev.kind,
                 "locator": ev.locator,
-                "content": ev.snippet or "",
+                "content": ev.content or "",
             }
             for ev in retrieval_result.evidence
         ]
