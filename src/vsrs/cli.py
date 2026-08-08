@@ -1175,5 +1175,147 @@ def audit_export(
     console.print(f"[green]Exported {count} audit events to {output}[/green]")
 
 
+# --- Role & Rate Limit CLI ---
+
+role_app = typer.Typer(help="RBAC role management")
+app.add_typer(role_app, name="role")
+
+ratelimit_app = typer.Typer(help="Rate limit management")
+app.add_typer(ratelimit_app, name="ratelimit")
+
+
+@role_app.command("list")
+def role_list() -> None:
+    """List all registered roles."""
+
+    from vsrs.enterprise import RoleManager
+
+    mgr = RoleManager()
+    roles = mgr.list_roles()
+    if not roles:
+        console.print("[yellow]No roles found.[/yellow]")
+        return
+
+    table = Table(title="Roles")
+    table.add_column("Name", style="cyan")
+    table.add_column("Description", style="white")
+    table.add_column("Permissions", style="green")
+    table.add_column("Parent", style="dim")
+
+    for r in roles:
+        table.add_row(
+            r.name,
+            r.description,
+            ", ".join(sorted(r.permissions)),
+            r.parent or "-",
+        )
+
+    console.print(table)
+
+
+@role_app.command("show")
+def role_show(
+    name: str = typer.Argument(..., help="Role name"),
+) -> None:
+    """Show details of a specific role."""
+
+    from vsrs.enterprise import RoleManager
+
+    mgr = RoleManager()
+    role = mgr.get(name)
+    if role is None:
+        console.print(f"[red]Role not found:[/red] {name}")
+        raise typer.Exit(1)
+
+    console.print(f"[cyan]Role:[/cyan] {role.name}")
+    console.print(f"  Description: {role.description}")
+    console.print(f"  Parent: {role.parent or '(none)'}")
+    console.print(f"  Permissions ({len(role.permissions)}):")
+    for perm in sorted(role.permissions):
+        console.print(f"    - {perm}")
+
+    resolved = mgr.resolve_permissions(name)
+    if len(resolved) > len(role.permissions):
+        console.print(f"  Resolved permissions ({len(resolved)}, including inheritance):")
+        for perm in sorted(resolved):
+            console.print(f"    - {perm}")
+
+
+@role_app.command("check")
+def role_check(
+    role_name: str = typer.Option(..., "--role", "-r", help="Role name"),
+    permission: str = typer.Option(..., "--permission", "-p", help="Permission to check"),
+) -> None:
+    """Check if a role has a specific permission."""
+
+    from vsrs.enterprise import RoleManager
+
+    mgr = RoleManager()
+    role = mgr.get(role_name)
+    if role is None:
+        console.print(f"[red]Role not found:[/red] {role_name}")
+        raise typer.Exit(1)
+
+    allowed = mgr.check(role_name, permission)
+    if allowed:
+        console.print(f"[green]ALLOWED[/green] Role '{role_name}' has permission '{permission}'")
+    else:
+        console.print(f"[red]DENIED[/red] Role '{role_name}' does not have permission '{permission}'")
+        raise typer.Exit(1)
+
+
+@ratelimit_app.command("usage")
+def ratelimit_usage(
+    identifier: str = typer.Option("default", "--id", "-i", help="Identifier to check"),
+) -> None:
+    """Show rate limit usage for an identifier."""
+
+    from vsrs.enterprise import RateLimiter, RateLimitConfig
+
+    limiter = RateLimiter(RateLimitConfig())
+    usage = limiter.get_usage(identifier)
+
+    table = Table(title=f"Rate Limit Usage: {identifier}")
+    table.add_column("Metric", style="cyan")
+    table.add_column("Used", style="white")
+    table.add_column("Limit", style="yellow")
+
+    table.add_row("Minute", str(usage["minute_used"]), str(usage["minute_limit"]))
+    table.add_row("Hour", str(usage["hour_used"]), str(usage["hour_limit"]))
+    table.add_row("Burst remaining", str(usage["burst_remaining"]), str(usage["burst_limit"]))
+
+    console.print(table)
+
+
+@ratelimit_app.command("config")
+def ratelimit_config() -> None:
+    """Show rate limit configuration."""
+
+    from vsrs.enterprise import RateLimiter, RateLimitConfig
+
+    limiter = RateLimiter(RateLimitConfig())
+    cfg = limiter.config
+
+    console.print(f"[cyan]Requests per minute:[/cyan] {cfg.requests_per_minute}")
+    console.print(f"[cyan]Requests per hour:[/cyan] {cfg.requests_per_hour}")
+    console.print(f"[cyan]Burst size:[/cyan] {cfg.burst_size}")
+
+
+@ratelimit_app.command("reset")
+def ratelimit_reset(
+    identifier: str = typer.Option(None, "--id", "-i", help="Reset only this identifier (default: all)"),
+) -> None:
+    """Reset rate limit state."""
+
+    from vsrs.enterprise import RateLimiter, RateLimitConfig
+
+    limiter = RateLimiter(RateLimitConfig())
+    limiter.reset(identifier)
+    if identifier:
+        console.print(f"[green]Rate limits reset for:[/green] {identifier}")
+    else:
+        console.print("[green]All rate limits reset.[/green]")
+
+
 if __name__ == "__main__":
     app()

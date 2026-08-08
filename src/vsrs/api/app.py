@@ -18,7 +18,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="VSRS API",
         description="Verified Software Reasoning System - evidence-grounded coding reasoning and verification platform",
-        version="2.3.0",
+        version="2.4.0",
         docs_url="/docs",
         redoc_url="/redoc",
     )

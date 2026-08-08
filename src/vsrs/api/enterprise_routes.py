@@ -44,6 +44,9 @@ class TenantResponse(BaseModel):
 class TenantListResponse(BaseModel):
     tenants: list[TenantResponse]
     count: int
+    total: int
+    offset: int = 0
+    limit: int | None = None
 
 
 class TenantUsageResponse(BaseModel):
@@ -171,10 +174,15 @@ def create_tenant(req: TenantCreateRequest) -> TenantResponse:
 
 
 @router.get("/tenants", response_model=TenantListResponse, dependencies=[Depends(require_api_key)])
-def list_tenants() -> TenantListResponse:
-    """List all tenants."""
+def list_tenants(offset: int = 0, limit: int | None = None) -> TenantListResponse:
+    """List all tenants with optional pagination."""
     mgr = get_tenant_manager()
     tenants = mgr.list_tenants()
+    total = len(tenants)
+    if limit is not None:
+        tenants = tenants[offset:offset + limit]
+    else:
+        tenants = tenants[offset:]
     return TenantListResponse(
         tenants=[
             TenantResponse(
@@ -188,6 +196,9 @@ def list_tenants() -> TenantListResponse:
             for t in tenants
         ],
         count=len(tenants),
+        total=total,
+        offset=offset,
+        limit=limit,
     )
 
 
@@ -443,6 +454,9 @@ class APIKeyCreateResponse(BaseModel):
 class APIKeyListResponse(BaseModel):
     keys: list[APIKeyResponse]
     count: int
+    total: int
+    offset: int = 0
+    limit: int | None = None
 
 
 class APIKeyCountResponse(BaseModel):
@@ -474,10 +488,15 @@ def create_api_key(req: APIKeyCreateRequest) -> APIKeyCreateResponse:
 
 
 @router.get("/keys", response_model=APIKeyListResponse, dependencies=[Depends(require_api_key)])
-def list_api_keys(user_id: str | None = None) -> APIKeyListResponse:
-    """List API keys, optionally filtered by user. Requires valid API key."""
+def list_api_keys(user_id: str | None = None, offset: int = 0, limit: int | None = None) -> APIKeyListResponse:
+    """List API keys, optionally filtered by user, with pagination. Requires valid API key."""
     mgr = get_key_manager()
     keys = mgr.list_keys(user_id=user_id)
+    total = len(keys)
+    if limit is not None:
+        keys = keys[offset:offset + limit]
+    else:
+        keys = keys[offset:]
     return APIKeyListResponse(
         keys=[
             APIKeyResponse(
@@ -492,6 +511,9 @@ def list_api_keys(user_id: str | None = None) -> APIKeyListResponse:
             for k in keys
         ],
         count=len(keys),
+        total=total,
+        offset=offset,
+        limit=limit,
     )
 
 
@@ -530,6 +552,9 @@ class AuditEventResponse(BaseModel):
 class AuditListResponse(BaseModel):
     events: list[AuditEventResponse]
     count: int
+    total: int
+    offset: int = 0
+    limit: int | None = None
 
 
 class AuditCountResponse(BaseModel):
@@ -542,15 +567,19 @@ def list_audit_events(
     user_id: str | None = None,
     resource: str | None = None,
     limit: int = 100,
+    offset: int = 0,
 ) -> AuditListResponse:
-    """Query audit events with filters. Requires valid API key."""
+    """Query audit events with filters and pagination. Requires valid API key."""
     auditor = get_auditor()
     events = auditor.query(
         event_type=event_type,
         user_id=user_id,
         resource=resource,
-        limit=limit,
+        limit=limit + offset if offset > 0 else limit,
     )
+    if offset > 0:
+        events = events[offset:offset + limit]
+    total = auditor.count()
     return AuditListResponse(
         events=[
             AuditEventResponse(
@@ -567,6 +596,9 @@ def list_audit_events(
             for e in events
         ],
         count=len(events),
+        total=total,
+        offset=offset,
+        limit=limit,
     )
 
 
@@ -648,6 +680,9 @@ class RoleResponse(BaseModel):
 class RoleListResponse(BaseModel):
     roles: list[RoleResponse]
     count: int
+    total: int
+    offset: int = 0
+    limit: int | None = None
 
 
 class PermissionCheckRequest(BaseModel):
@@ -663,10 +698,15 @@ class PermissionCheckResponse(BaseModel):
 
 
 @router.get("/roles", response_model=RoleListResponse, dependencies=[Depends(require_api_key)])
-def list_roles() -> RoleListResponse:
-    """List all registered roles. Requires valid API key."""
+def list_roles(offset: int = 0, limit: int | None = None) -> RoleListResponse:
+    """List all registered roles with optional pagination. Requires valid API key."""
     role_mgr = get_role_manager()
     roles = role_mgr.list_roles()
+    total = len(roles)
+    if limit is not None:
+        roles = roles[offset:offset + limit]
+    else:
+        roles = roles[offset:]
     return RoleListResponse(
         roles=[
             RoleResponse(
@@ -678,6 +718,9 @@ def list_roles() -> RoleListResponse:
             for r in roles
         ],
         count=len(roles),
+        total=total,
+        offset=offset,
+        limit=limit,
     )
 
 

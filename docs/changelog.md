@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [2.4.0] - 2026-08-08
+
+### Added
+- Role & rate limit CLI commands
+  - `vsrs role list/show/check` — RBAC role management
+  - `vsrs ratelimit usage/config/reset` — rate limit management
+  - 15 CLI tests
+- API pagination on list endpoints
+  - `GET /tenants`, `GET /keys`, `GET /audit`, `GET /roles` now support `offset` and `limit` query params
+  - Response models include `total`, `offset`, `limit` fields
+  - 6 pagination tests
+
+
 ## [2.3.0] - 2026-08-08
 
 ### Added

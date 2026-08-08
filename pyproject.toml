@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vsrs"
-version = "2.3.0"
+version = "2.4.0"
 description = "Verified Software Reasoning System - evidence-grounded coding reasoning and verification platform"
 readme = "README.md"
 license = {text = "MIT"}
