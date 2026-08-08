@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.3.0] - 2026-08-08
+
+### Added
+- Tree-sitter structural indexing for multi-language repositories
+  - TreeSitterIndexer: parses Python, JavaScript, TypeScript, Go, Rust, Java, C, C++, Ruby
+  - Node type maps per language for function/class/method/import detection
+  - Decorator and docstring extraction for Python
+  - Qualified name building with parent class tracking
+  - HybridSymbolIndex: uses Python AST for .py files, tree-sitter for others
+  - Graceful fallback when tree-sitter is not installed
+  - Optional dependency: `pip install vsrs[tree-sitter]`
+  - 51 tests
+
+
 ## [1.2.0] - 2026-08-08
 
 ### Added

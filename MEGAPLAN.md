@@ -239,12 +239,22 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 - Integrated into RunDetailPage
 - 32 tests
 
-## Future Roadmap (Post-23)
+### Phase 24: Tree-Sitter Structural Indexing ✅
+- TreeSitterIndexer: multi-language symbol extraction via tree-sitter
+  - Supports Python, JavaScript, TypeScript, Go, Rust, Java, C, C++, Ruby
+  - Node type maps per language for function/class/method/import detection
+  - Decorator and docstring extraction for Python
+  - Qualified name building with parent class tracking
+  - Graceful fallback when tree-sitter not installed
+- HybridSymbolIndex: uses Python AST for .py files, tree-sitter for others
+- Optional dependency: `pip install vsrs[tree-sitter]`
+- 51 tests
+
+## Future Roadmap (Post-24)
 
 ### Advanced Features
 - Multi-tenant project isolation
 - SSO integration (SAML, OIDC)
-- Tree-sitter for structural indexing
 - Horizontal scaling of verification workers with resource allocation
 
 ---
@@ -256,10 +266,10 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 | Source files | 95+ Python files |
 | Source lines | ~24,000 LOC |
 | Test files | 24 test files |
-| Test count | 964 tests |
-| Modules | 18 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval, plugins, languages, distributed, finetuning, enterprise, api.websocket) + VSCode extension + Web dashboard |
+| Test count | 1015 tests |
+| Modules | 19 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval, plugins, languages, distributed, finetuning, enterprise, api.websocket, repo.tree_sitter_index) + VSCode extension + Web dashboard |
 | CLI commands | 17+ |
-| Phases completed | 23 of 23 |
+| Phases completed | 24 of 24 |
 | Dependencies | pydantic, typer, rich, pyyaml |
 | Optional deps | fastapi, uvicorn, httpx, openai, anthropic |
 
@@ -281,3 +291,4 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 | 1.0.0 | 20–21 | Enterprise features, VSCode extension |
 | 1.1.0 | 22 | Web UI dashboard |
 | 1.2.0 | 23 | Real-time WebSocket & provenance graph viewer |
+| 1.3.0 | 24 | Tree-sitter structural indexing |
