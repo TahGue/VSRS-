@@ -250,10 +250,20 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 - Optional dependency: `pip install vsrs[tree-sitter]`
 - 51 tests
 
-## Future Roadmap (Post-24)
+### Phase 25: Multi-Tenant Project Isolation ✅
+- Tenant model with status (active, suspended, deleted) and metadata
+- Project model scoped to tenants with repo root tracking
+- ResourceQuota: max_projects, max_runs_per_day, max_concurrent_runs, max_storage_mb, max_api_keys
+- UsageRecord: daily run tracking, concurrent run counting, storage and API key usage
+- TenantManager: full CRUD for tenants and projects, quota enforcement
+- QuotaExceededError with tenant, resource, limit, and current usage details
+- Usage summary with per-resource used/limit/remaining breakdown
+- Unlimited quota support (-1 limits)
+- 57 tests
+
+## Future Roadmap (Post-25)
 
 ### Advanced Features
-- Multi-tenant project isolation
 - SSO integration (SAML, OIDC)
 - Horizontal scaling of verification workers with resource allocation
 
@@ -266,10 +276,10 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 | Source files | 95+ Python files |
 | Source lines | ~24,000 LOC |
 | Test files | 24 test files |
-| Test count | 1015 tests |
-| Modules | 19 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval, plugins, languages, distributed, finetuning, enterprise, api.websocket, repo.tree_sitter_index) + VSCode extension + Web dashboard |
+| Test count | 1072 tests |
+| Modules | 20 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval, plugins, languages, distributed, finetuning, enterprise, api.websocket, repo.tree_sitter_index, enterprise.tenant) + VSCode extension + Web dashboard |
 | CLI commands | 17+ |
-| Phases completed | 24 of 24 |
+| Phases completed | 25 of 25 |
 | Dependencies | pydantic, typer, rich, pyyaml |
 | Optional deps | fastapi, uvicorn, httpx, openai, anthropic |
 
@@ -292,3 +302,4 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 | 1.1.0 | 22 | Web UI dashboard |
 | 1.2.0 | 23 | Real-time WebSocket & provenance graph viewer |
 | 1.3.0 | 24 | Tree-sitter structural indexing |
+| 1.4.0 | 25 | Multi-tenant project isolation |

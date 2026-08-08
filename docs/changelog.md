@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.4.0] - 2026-08-08
+
+### Added
+- Multi-tenant project isolation
+  - Tenant model with status (active, suspended, deleted) and metadata
+  - Project model scoped to tenants with repo root tracking
+  - ResourceQuota: max_projects, max_runs_per_day, max_concurrent_runs, max_storage_mb, max_api_keys
+  - UsageRecord: daily run tracking, concurrent run counting, storage and API key usage
+  - TenantManager: full CRUD for tenants and projects, quota enforcement
+  - QuotaExceededError with tenant, resource, limit, and current usage details
+  - Usage summary with per-resource used/limit/remaining breakdown
+  - Unlimited quota support (-1 limits)
+  - 57 tests
+
+
 ## [1.3.0] - 2026-08-08
 
 ### Added

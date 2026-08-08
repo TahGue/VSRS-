@@ -1,7 +1,8 @@
 """Enterprise features for VSRS.
 
 Provides authentication, role-based access control (RBAC), audit logging,
-API key management, and rate limiting for production deployments.
+API key management, rate limiting, and multi-tenant project isolation
+for production deployments.
 """
 
 from __future__ import annotations
@@ -28,6 +29,16 @@ from vsrs.enterprise.ratelimit import (
     RateLimiter,
     RateLimitResult,
 )
+from vsrs.enterprise.tenant import (
+    Project,
+    QuotaExceededError,
+    ResourceQuota,
+    Tenant,
+    TenantManager,
+    TenantNotFoundError,
+    TenantStatus,
+    UsageRecord,
+)
 
 __all__ = [
     "APIKey",
@@ -37,11 +48,19 @@ __all__ = [
     "AuditLogger",
     "AuthContext",
     "Permission",
+    "Project",
+    "QuotaExceededError",
     "RateLimitConfig",
     "RateLimitResult",
     "RateLimiter",
+    "ResourceQuota",
     "Role",
     "RoleManager",
+    "Tenant",
+    "TenantManager",
+    "TenantNotFoundError",
+    "TenantStatus",
+    "UsageRecord",
     "User",
     "has_permission",
 ]
