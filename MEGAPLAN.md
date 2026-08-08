@@ -175,54 +175,68 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 
 ---
 
-## Future Roadmap (Post-15)
+## Completed Phases (16–21)
 
-### Plugin System
-- Custom verifier plugins (register new check types)
-- Custom retriever plugins (alternative indexing strategies)
-- Custom critic checks (domain-specific review rules)
-- Plugin discovery via entry points
+### Phase 16: Plugin System ✅
+- Plugin ABCs: VerifierPlugin, RetrieverPlugin, CriticPlugin
+- PluginRegistry with entry point discovery
+- Built-in plugins: FileSizeVerifier, ImportCheckerVerifier, GitLogRetriever, MinimalityCritic, SecurityCritic
+- 42 tests
 
-### Multi-Language Support
-- Go: AST parsing, go test, go vet, staticcheck
-- Rust: cargo, clippy, rust-analyzer
-- Java: Maven/Gradle, JUnit, Checkstyle, SpotBugs
-- TypeScript: tsc, eslint, jest
-- Language-agnostic: tree-sitter for structural indexing
+### Phase 17: Multi-Language Support ✅
+- LanguageAdapter ABC: syntax_check, build, run_tests, lint, type_check
+- LanguageRegistry with detection from files and repos
+- Adapters: Python, Go, Rust, TypeScript, Java
+- MultiLanguageVerificationRunner for pipeline integration
+- 59 tests
 
-### Web UI Dashboard
-- React/Next.js dashboard for run management
-- Real-time pipeline visualization
+### Phase 18: Distributed Execution ✅
+- TaskQueue ABC: submit, fetch, complete, cancel, list_jobs
+- InMemoryQueue (thread-safe, priority-ordered)
+- RedisQueue (JSON serialization, BRPOP/LPUSH, graceful fallback)
+- Worker with background thread, handler registration, stats
+- DistributedBenchmarkRunner for parallel benchmark execution
+- 40 tests
+
+### Phase 19: Model Fine-Tuning Pipeline ✅
+- FineTuningJob with 5 methods (full, lora, qlora, dpo, ppo)
+- JobOrchestrator with custom executors
+- DatasetVersionManager with content hashing and deduplication
+- ModelComparisonHarness for A/B comparison with per-task and aggregate deltas
+- 44 tests
+
+### Phase 20: Enterprise Features ✅
+- Authentication: User, APIKey (hashed), AuthContext, APIKeyManager
+- RBAC: Permission enum (14 permissions), Role with inheritance, RoleManager
+- Audit: AuditEvent, AuditEventType (15 types), AuditLogger with query and export
+- Rate Limiting: token bucket + sliding window, per-identifier tracking
+- 71 tests
+
+### Phase 21: VSCode Extension ✅
+- TypeScript extension: 10 commands, 2 sidebar views, 6 config settings
+- API client, task tree provider, status bar, webview results panel
+- Keybindings, auto-connect, auto-verify on save
+- 35 tests
+
+### Phase 22: Web UI Dashboard ✅
+- React 18 + Vite 5 + React Router 6 dashboard
+- Runs page: list, create new runs with form
+- Run detail: run info, task, verification checks, diff viewer with syntax highlighting
+- Benchmarks page: browse benchmark suites
+- Settings page: view configuration
+- Dark theme with GitHub-inspired design
+- API proxy for dev, build output for production serving
+- 37 tests
+
+## Future Roadmap (Post-22)
+
+### Advanced Features
+- Real-time pipeline visualization via WebSocket
 - Provenance graph interactive viewer
-- Diff viewer with syntax highlighting
-- Benchmark results dashboard
-
-### Distributed Execution
-- Celery/RQ task queue for parallel benchmark runs
-- Redis-backed run state coordination
-- Horizontal scaling of verification workers
-- Job priority and resource allocation
-
-### Model Fine-Tuning Pipeline
-- Automated trajectory collection from production runs
-- Dataset versioning and deduplication
-- Fine-tuning job orchestration (LoRA, QLoRA)
-- Evaluation harness for fine-tuned models
-- A/B comparison between base and fine-tuned models
-
-### VSCode Extension
-- Inline task creation from editor context
-- Live run status in status bar
-- Diff preview in editor
-- Provenance graph sidebar view
-- Quick actions: run, verify, review from editor
-
-### Enterprise Features
-- Authentication and authorization (OAuth, API keys)
 - Multi-tenant project isolation
-- Audit log retention policies
 - SSO integration (SAML, OIDC)
-- Role-based access control (admin, developer, viewer)
+- Tree-sitter for structural indexing
+- Horizontal scaling of verification workers with resource allocation
 
 ---
 
@@ -230,13 +244,13 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 
 | Metric | Value |
 |--------|-------|
-| Source files | 64 Python files |
-| Source lines | ~13,700 LOC |
-| Test files | 17 test files |
-| Test count | 604 tests |
-| Modules | 11 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval) |
+| Source files | 95+ Python files |
+| Source lines | ~24,000 LOC |
+| Test files | 24 test files |
+| Test count | 932 tests |
+| Modules | 17 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval, plugins, languages, distributed, finetuning, enterprise) + VSCode extension + Web dashboard |
 | CLI commands | 17+ |
-| Phases completed | 15 of 15 |
+| Phases completed | 22 of 22 |
 | Dependencies | pydantic, typer, rich, pyyaml |
 | Optional deps | fastapi, uvicorn, httpx, openai, anthropic |
 
@@ -251,3 +265,9 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 | 0.3.0 | 12 | Training data export |
 | 0.4.0 | 13 | Evaluation & benchmarking |
 | 0.5.0 | 14–15 | LLM integration, documentation, polish |
+| 0.6.0 | 16 | Plugin system |
+| 0.7.0 | 17 | Multi-language support |
+| 0.8.0 | 18 | Distributed execution |
+| 0.9.0 | 19 | Fine-tuning pipeline |
+| 1.0.0 | 20–21 | Enterprise features, VSCode extension |
+| 1.1.0 | 22 | Web UI dashboard |
