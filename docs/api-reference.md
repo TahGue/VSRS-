@@ -347,6 +347,110 @@ List all available benchmark tasks.
 
 ---
 
+## Authentication
+
+Enterprise API endpoints require a valid API key passed via the `X-API-Key` header.
+
+### Scopes
+
+| Scope | Access |
+|-------|--------|
+| `admin:all` | Full access to all endpoints |
+| `tenant:admin` | Tenant and project CRUD operations |
+| `sso:admin` | SSO cleanup operations |
+| `read` | Read-only access to GET endpoints |
+
+### Example
+
+```bash
+curl -H "X-API-Key: vsrs_your_key_here" \
+  http://localhost:8000/api/v1/tenants
+```
+
+---
+
+## Enterprise Endpoints
+
+### Tenant Management
+
+#### `POST /api/v1/tenants`
+
+Create a new tenant with resource quotas. **Requires `tenant:admin` scope.**
+
+**Request**:
+```json
+{
+  "tenant_id": "acme",
+  "name": "Acme Corp",
+  "max_projects": 20,
+  "max_runs_per_day": 500
+}
+```
+
+#### `GET /api/v1/tenants`
+
+List all tenants. **Requires valid API key.**
+
+#### `GET /api/v1/tenants/{id}`
+
+Get tenant details. **Requires valid API key.**
+
+#### `GET /api/v1/tenants/{id}/usage`
+
+Get tenant resource usage. **Requires valid API key.**
+
+#### `POST /api/v1/tenants/{id}/suspend`
+
+Suspend a tenant. **Requires `tenant:admin` scope.**
+
+#### `POST /api/v1/tenants/{id}/reactivate`
+
+Reactivate a suspended tenant. **Requires `tenant:admin` scope.**
+
+#### `DELETE /api/v1/tenants/{id}`
+
+Delete a tenant. **Requires `tenant:admin` scope.**
+
+### Project Management
+
+#### `POST /api/v1/tenants/{id}/projects`
+
+Create a project within a tenant. **Requires `tenant:admin` scope.**
+
+#### `GET /api/v1/tenants/{id}/projects`
+
+List all projects for a tenant. **Requires valid API key.**
+
+#### `DELETE /api/v1/tenants/{id}/projects/{pid}`
+
+Delete a project. **Requires `tenant:admin` scope.**
+
+### SSO Management
+
+#### `GET /api/v1/sso/providers`
+
+List configured SSO providers. **Requires valid API key.**
+
+#### `GET /api/v1/sso/sessions`
+
+List active SSO sessions. **Requires valid API key.**
+
+#### `GET /api/v1/sso/users`
+
+List SSO-provisioned users. **Requires valid API key.**
+
+#### `POST /api/v1/sso/cleanup`
+
+Remove expired SSO sessions. **Requires `sso:admin` scope.**
+
+### Worker Pool
+
+#### `GET /api/v1/pool/stats`
+
+Get worker pool statistics. **Requires valid API key.**
+
+---
+
 ## CLI Commands
 
 | Command | Description |
@@ -362,6 +466,11 @@ List all available benchmark tasks.
 | `vsrs provenance` | Show provenance graph |
 | `vsrs config` | Show or validate configuration |
 | `vsrs benchmark` | Run benchmark suite |
+| `vsrs tenant create/list/show/suspend/reactivate/delete` | Manage tenants |
+| `vsrs sso list-providers/list-sessions/cleanup/list-users` | Manage SSO |
+| `vsrs pool stats` | Show worker pool statistics |
+| `vsrs key create/list/revoke/validate/count` | Manage API keys |
+| `vsrs audit list/count/export` | Query and export audit logs |
 
 ---
 
@@ -370,6 +479,10 @@ List all available benchmark tasks.
 | Code | Description |
 |------|-------------|
 | `400` | Bad request (invalid input, repo not found) |
+| `401` | Missing or invalid API key |
+| `403` | Insufficient scope or permission |
 | `404` | Resource not found |
+| `409` | Conflict (duplicate resource) |
 | `422` | Validation error (Pydantic) |
+| `429` | Rate limit exceeded |
 | `500` | Internal server error |

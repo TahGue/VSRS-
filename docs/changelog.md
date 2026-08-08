@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [2.1.0] - 2026-08-08
+
+### Added
+- API key & audit management CLI
+  - `vsrs key create/list/revoke/validate/count`
+  - `vsrs audit list/count/export`
+  - 12 CLI tests
+- API reference documentation
+  - Authentication section with scopes table
+  - Enterprise endpoints section (tenant, project, SSO, pool)
+  - Updated CLI commands table
+  - Updated error codes (401, 403, 409, 429)
+
+
 ## [2.0.0] - 2026-08-08
 
 ### Added

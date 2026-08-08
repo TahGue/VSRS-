@@ -1002,5 +1002,178 @@ pool.stop()
 """)
 
 
+# --- API Key & Audit CLI ---
+
+key_app = typer.Typer(help="API key management")
+app.add_typer(key_app, name="key")
+
+audit_app = typer.Typer(help="Audit log management")
+app.add_typer(audit_app, name="audit")
+
+
+@key_app.command("create")
+def key_create(
+    user_id: str = typer.Option(..., "--user", "-u", help="User ID for this key"),
+    name: str = typer.Option("", "--name", "-n", help="Human-readable key name"),
+    scopes: str = typer.Option("", "--scopes", "-s", help="Comma-separated scopes (e.g. read,write,admin:all)"),
+) -> None:
+    """Create a new API key."""
+
+    from vsrs.enterprise import APIKeyManager
+
+    mgr = APIKeyManager()
+    scope_list = [s.strip() for s in scopes.split(",") if s.strip()] if scopes else []
+    raw_key, api_key = mgr.create_key(user_id=user_id, name=name, scopes=scope_list)
+    console.print(f"[green]API key created:[/green] {api_key.id}")
+    console.print(f"  User: {api_key.user_id}")
+    console.print(f"  Name: {api_key.name}")
+    console.print(f"  Scopes: {', '.join(api_key.scopes) if api_key.scopes else '(none)'}")
+    console.print(f"\n[bold yellow]Raw key (save this — shown only once):[/bold yellow]")
+    console.print(f"  {raw_key}")
+
+
+@key_app.command("list")
+def key_list(
+    user_id: str = typer.Option(None, "--user", "-u", help="Filter by user ID"),
+) -> None:
+    """List API keys."""
+
+    from vsrs.enterprise import APIKeyManager
+
+    mgr = APIKeyManager()
+    keys = mgr.list_keys(user_id=user_id)
+    if not keys:
+        console.print("[yellow]No API keys found.[/yellow]")
+        return
+
+    table = Table(title="API Keys")
+    table.add_column("ID", style="cyan")
+    table.add_column("User", style="white")
+    table.add_column("Name", style="green")
+    table.add_column("Scopes", style="blue")
+    table.add_column("Valid", style="yellow")
+
+    for k in keys:
+        table.add_row(
+            k.id,
+            k.user_id,
+            k.name or "(unnamed)",
+            ", ".join(k.scopes) if k.scopes else "(none)",
+            "Yes" if k.is_valid else "No",
+        )
+
+    console.print(table)
+
+
+@key_app.command("revoke")
+def key_revoke(
+    key_id: str = typer.Argument(..., help="API key ID to revoke"),
+) -> None:
+    """Revoke an API key."""
+
+    from vsrs.enterprise import APIKeyManager
+
+    mgr = APIKeyManager()
+    revoked = mgr.revoke(key_id)
+    if revoked:
+        console.print(f"[red]API key revoked:[/red] {key_id}")
+    else:
+        console.print(f"[yellow]Key not found or already revoked:[/yellow] {key_id}")
+        raise typer.Exit(1)
+
+
+@key_app.command("validate")
+def key_validate(
+    raw_key: str = typer.Argument(..., help="Raw API key to validate"),
+) -> None:
+    """Validate an API key."""
+
+    from vsrs.enterprise import APIKeyManager
+
+    mgr = APIKeyManager()
+    key = mgr.validate(raw_key)
+    if key is None:
+        console.print("[red]Invalid or revoked API key.[/red]")
+        raise typer.Exit(1)
+    console.print(f"[green]Valid API key:[/green] {key.id}")
+    console.print(f"  User: {key.user_id}")
+    console.print(f"  Name: {key.name}")
+    console.print(f"  Scopes: {', '.join(key.scopes) if key.scopes else '(none)'}")
+
+
+@key_app.command("count")
+def key_count() -> None:
+    """Count total API keys."""
+
+    from vsrs.enterprise import APIKeyManager
+
+    mgr = APIKeyManager()
+    console.print(f"Total API keys: {mgr.count()}")
+
+
+@audit_app.command("list")
+def audit_list(
+    event_type: str = typer.Option(None, "--type", "-t", help="Filter by event type"),
+    user_id: str = typer.Option(None, "--user", "-u", help="Filter by user ID"),
+    resource: str = typer.Option(None, "--resource", "-r", help="Filter by resource"),
+    limit: int = typer.Option(20, "--limit", "-l", help="Max events to show"),
+) -> None:
+    """List audit events with optional filters."""
+
+    from vsrs.enterprise import AuditLogger
+
+    auditor = AuditLogger()
+    events = auditor.query(
+        event_type=event_type,
+        user_id=user_id,
+        resource=resource,
+        limit=limit,
+    )
+    if not events:
+        console.print("[yellow]No audit events found.[/yellow]")
+        return
+
+    table = Table(title=f"Audit Events ({len(events)} shown)")
+    table.add_column("Time", style="dim")
+    table.add_column("Type", style="cyan")
+    table.add_column("User", style="white")
+    table.add_column("Resource", style="green")
+    table.add_column("Success", style="yellow")
+
+    for e in events:
+        table.add_row(
+            e.timestamp.isoformat()[:19],
+            e.event_type,
+            e.user_id[:20] if e.user_id else "-",
+            e.resource[:30] if e.resource else "-",
+            "Yes" if e.success else "No",
+        )
+
+    console.print(table)
+
+
+@audit_app.command("count")
+def audit_count() -> None:
+    """Count total audit events."""
+
+    from vsrs.enterprise import AuditLogger
+
+    auditor = AuditLogger()
+    console.print(f"Total audit events: {auditor.count()}")
+
+
+@audit_app.command("export")
+def audit_export(
+    output: Path = typer.Option(Path("audit_export.jsonl"), "--output", "-o", help="Output file path"),
+) -> None:
+    """Export audit events to JSONL file."""
+
+    from vsrs.enterprise import AuditLogger
+
+    auditor = AuditLogger()
+    count = auditor.export_jsonl(output)
+    console.print(f"[green]Exported {count} audit events to {output}[/green]")
+
+
 if __name__ == "__main__":
     app()

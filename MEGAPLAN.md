@@ -319,7 +319,14 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 - 20 auth middleware tests (no key, invalid key, read-only, admin, unprotected)
 - 1252 total tests
 
-## Future Roadmap (Post-31)
+### Phase 32: API Key & Audit CLI + API Reference ✅
+- vsrs key create/list/revoke/validate/count
+- vsrs audit list/count/export
+- 12 CLI tests
+- API reference: authentication section, enterprise endpoints, updated error codes
+- 1264 total tests
+
+## Future Roadmap (Post-32)
 
 All planned phases complete. The VSRS project now includes:
 - Core pipeline with provenance tracking
@@ -342,12 +349,12 @@ All planned phases complete. The VSRS project now includes:
 |--------|-------|
 | Source files | 95+ Python files |
 | Source lines | ~24,000 LOC |
-| Test files | 24 test files |
-| Test count | 1252 tests |
+| Test files | 27 test files |
+| Test count | 1264 tests |
 | Modules | 24 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval, plugins, languages, distributed, finetuning, enterprise, api.websocket, repo.tree_sitter_index, enterprise.tenant, enterprise.sso, distributed.pool, api.enterprise_routes, api.auth) + VSCode extension + Web dashboard |
-| CLI commands | 25+ |
+| CLI commands | 35+ |
 | API endpoints | 25+ |
-| Phases completed | 31 of 31 |
+| Phases completed | 32 of 32 |
 | Dependencies | pydantic, typer, rich, pyyaml |
 | Optional deps | fastapi, uvicorn, httpx, openai, anthropic |
 
@@ -377,3 +384,4 @@ All planned phases complete. The VSRS project now includes:
 | 1.8.0 | 29 | Enterprise CLI commands (tenant, SSO, pool) |
 | 1.9.0 | 30 | Enterprise API endpoints |
 | 2.0.0 | 31 | API authentication middleware |
+| 2.1.0 | 32 | API key & audit CLI, API reference docs |
