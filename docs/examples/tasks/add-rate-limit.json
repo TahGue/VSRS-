@@ -1,0 +1,11 @@
+{
+  "instruction": "Add rate limiting to the API endpoints. Limit each client to 100 requests per minute using a sliding window counter.",
+  "type": "feature",
+  "risk": "medium",
+  "acceptance_criteria": [
+    "Clients exceeding 100 req/min receive 429 Too Many Requests",
+    "Rate limit is per-client (identified by API key or IP)",
+    "Rate limit headers are included in responses (X-RateLimit-Limit, X-RateLimit-Remaining)",
+    "Add tests for rate limit enforcement and reset"
+  ]
+}

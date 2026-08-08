@@ -1,0 +1,11 @@
+{
+  "instruction": "Fix the SQL injection vulnerability in the query builder. User input must be parameterized, not string-interpolated.",
+  "type": "security",
+  "risk": "high",
+  "acceptance_criteria": [
+    "All database queries use parameterized statements",
+    "No string interpolation or f-strings in SQL queries",
+    "Existing tests pass with no regressions",
+    "Add test that verifies injection attempts are rejected"
+  ]
+}

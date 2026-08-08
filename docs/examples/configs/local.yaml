@@ -1,0 +1,27 @@
+# Local development configuration with stub LLM
+# Use this for testing and offline development
+
+database:
+  url: ~/.vsrs/vsrs.db
+
+model:
+  provider: stub
+  model_name: stub
+  max_tokens: 4096
+  temperature: 0.2
+
+verification:
+  max_repair_attempts: 3
+  required_gates:
+    - syntax
+    - build
+    - existing_tests
+  optional_gates:
+    - type_check
+    - lint
+
+sandbox:
+  use_docker: false
+  worktree_dir: ~/.vsrs/worktrees
+  network_disabled: true
+  wall_time_limit_seconds: 300

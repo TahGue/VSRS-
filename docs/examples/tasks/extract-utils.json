@@ -1,0 +1,12 @@
+{
+  "instruction": "Extract the duplicated date formatting logic from process_order.py and shipping.py into a shared utility module called date_utils.py. Update all imports accordingly.",
+  "type": "refactor",
+  "risk": "medium",
+  "acceptance_criteria": [
+    "New date_utils.py module with format_date and parse_date functions",
+    "process_order.py and shipping.py import from date_utils",
+    "No duplicated date formatting code remains",
+    "All existing tests pass",
+    "Public API of process_order and shipping unchanged"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "instruction": "Add comprehensive tests for the validate_input function in validators.py. Cover edge cases: empty strings, None, very long inputs, unicode, and boundary values.",
+  "type": "test",
+  "risk": "low",
+  "acceptance_criteria": [
+    "Tests cover empty string, None, max length, unicode, and boundary values",
+    "All new tests pass",
+    "Test names are descriptive and follow naming convention",
+    "No existing tests are modified"
+  ]
+}

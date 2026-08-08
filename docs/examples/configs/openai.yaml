@@ -1,0 +1,31 @@
+# Production configuration with OpenAI GPT-4o
+# Requires OPENAI_API_KEY environment variable
+
+database:
+  url: ~/.vsrs/vsrs.db
+
+model:
+  provider: openai
+  model_name: gpt-4o
+  api_key_env: OPENAI_API_KEY
+  max_tokens: 4096
+  temperature: 0.2
+
+verification:
+  max_repair_attempts: 3
+  required_gates:
+    - syntax
+    - build
+    - existing_tests
+    - new_targeted_tests
+  optional_gates:
+    - type_check
+    - lint
+    - static_analysis
+    - security_scan
+
+sandbox:
+  use_docker: false
+  worktree_dir: ~/.vsrs/worktrees
+  network_disabled: true
+  wall_time_limit_seconds: 600

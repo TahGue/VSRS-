@@ -1,0 +1,35 @@
+# Docker sandbox isolation configuration
+# Use this for untrusted code execution
+
+database:
+  url: ~/.vsrs/vsrs.db
+
+model:
+  provider: openai
+  model_name: gpt-4o
+  api_key_env: OPENAI_API_KEY
+  max_tokens: 4096
+  temperature: 0.2
+
+verification:
+  max_repair_attempts: 3
+  required_gates:
+    - syntax
+    - build
+    - existing_tests
+    - new_targeted_tests
+  optional_gates:
+    - type_check
+    - lint
+    - static_analysis
+    - security_scan
+
+sandbox:
+  use_docker: true
+  worktree_dir: ~/.vsrs/worktrees
+  network_disabled: true
+  cpu_limit: "2"
+  memory_limit: "2g"
+  wall_time_limit_seconds: 600
+  mount_paths:
+    - /tmp/vsrs-cache
