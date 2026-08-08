@@ -39,6 +39,17 @@ from vsrs.enterprise.tenant import (
     TenantStatus,
     UsageRecord,
 )
+from vsrs.enterprise.sso import (
+    OIDCProvider,
+    SAMLProvider,
+    SSOAuthenticationError,
+    SSOError,
+    SSOManager,
+    SSOProtocol,
+    SSOProviderNotFoundError,
+    SSOSession,
+    SSOTokenExpiredError,
+)
 
 __all__ = [
     "APIKey",
@@ -47,6 +58,7 @@ __all__ = [
     "AuditEventType",
     "AuditLogger",
     "AuthContext",
+    "OIDCProvider",
     "Permission",
     "Project",
     "QuotaExceededError",
@@ -56,6 +68,14 @@ __all__ = [
     "ResourceQuota",
     "Role",
     "RoleManager",
+    "SAMLProvider",
+    "SSOAuthenticationError",
+    "SSOError",
+    "SSOManager",
+    "SSOProtocol",
+    "SSOProviderNotFoundError",
+    "SSOSession",
+    "SSOTokenExpiredError",
     "Tenant",
     "TenantManager",
     "TenantNotFoundError",

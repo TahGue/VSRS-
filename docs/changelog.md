@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.5.0] - 2026-08-08
+
+### Added
+- SSO integration (SAML 2.0 and OpenID Connect)
+  - SAMLProvider: entity ID, SSO/SLO URLs, X.509 cert, attribute mapping
+  - OIDCProvider: issuer URL, client ID/secret, scopes, authorize/token/userinfo URLs
+  - SSOSession: token-based sessions with expiration and refresh
+  - SSOManager: provider registration, OIDC authorize URL generation,
+    JWT token validation (exp, iss, aud checks), SAML response validation,
+    automatic user provisioning from IdP attributes
+  - Session management: get/logout/refresh/cleanup expired sessions
+  - Error hierarchy: SSOError, SSOAuthenticationError, SSOTokenExpiredError, SSOProviderNotFoundError
+  - 50 tests
+
+
 ## [1.4.0] - 2026-08-08
 
 ### Added

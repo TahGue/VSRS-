@@ -261,10 +261,20 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 - Unlimited quota support (-1 limits)
 - 57 tests
 
-## Future Roadmap (Post-25)
+### Phase 26: SSO Integration (SAML, OIDC) ✅
+- SAMLProvider: entity ID, SSO/SLO URLs, X.509 cert, attribute mapping
+- OIDCProvider: issuer URL, client ID/secret, scopes, authorize/token/userinfo URLs
+- SSOSession: token-based sessions with expiration and refresh
+- SSOManager: provider registration, OIDC authorize URL generation,
+  JWT token validation (exp, iss, aud checks), SAML response validation,
+  automatic user provisioning from IdP attributes
+- Session management: get/logout/refresh/cleanup expired sessions
+- Error hierarchy: SSOError, SSOAuthenticationError, SSOTokenExpiredError, SSOProviderNotFoundError
+- 50 tests
+
+## Future Roadmap (Post-26)
 
 ### Advanced Features
-- SSO integration (SAML, OIDC)
 - Horizontal scaling of verification workers with resource allocation
 
 ---
@@ -276,10 +286,10 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 | Source files | 95+ Python files |
 | Source lines | ~24,000 LOC |
 | Test files | 24 test files |
-| Test count | 1072 tests |
-| Modules | 20 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval, plugins, languages, distributed, finetuning, enterprise, api.websocket, repo.tree_sitter_index, enterprise.tenant) + VSCode extension + Web dashboard |
+| Test count | 1122 tests |
+| Modules | 21 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval, plugins, languages, distributed, finetuning, enterprise, api.websocket, repo.tree_sitter_index, enterprise.tenant, enterprise.sso) + VSCode extension + Web dashboard |
 | CLI commands | 17+ |
-| Phases completed | 25 of 25 |
+| Phases completed | 26 of 26 |
 | Dependencies | pydantic, typer, rich, pyyaml |
 | Optional deps | fastapi, uvicorn, httpx, openai, anthropic |
 
@@ -303,3 +313,4 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 | 1.2.0 | 23 | Real-time WebSocket & provenance graph viewer |
 | 1.3.0 | 24 | Tree-sitter structural indexing |
 | 1.4.0 | 25 | Multi-tenant project isolation |
+| 1.5.0 | 26 | SSO integration (SAML, OIDC) |
