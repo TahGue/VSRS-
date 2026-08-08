@@ -8,16 +8,24 @@ from fastapi.testclient import TestClient
 
 from vsrs.api.app import create_app
 from vsrs.api.enterprise_routes import _tenant_mgr, _sso_mgr
+from vsrs.api.auth import reset_managers, get_key_manager
 
 
 @pytest.fixture
 def client():
-    """Create a test client with fresh managers."""
+    """Create a test client with fresh managers and admin API key."""
     import vsrs.api.enterprise_routes as er
     er._tenant_mgr = None
     er._sso_mgr = None
+    reset_managers()
     app = create_app()
-    return TestClient(app)
+    c = TestClient(app)
+
+    # Create admin API key for all requests
+    key_mgr = get_key_manager()
+    raw_key, _ = key_mgr.create_key(user_id="admin", name="admin", scopes=["admin:all"])
+    c.headers["X-API-Key"] = raw_key
+    return c
 
 
 # --- Tenant endpoints ---

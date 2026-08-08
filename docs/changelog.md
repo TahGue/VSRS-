@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [2.0.0] - 2026-08-08
+
+### Added
+- API authentication middleware
+  - `X-API-Key` header validation via `require_api_key` dependency
+  - Scope-based access control via `require_scope` dependency
+  - Rate limiting integrated into auth flow (429 with Retry-After header)
+  - Audit logging of API key validations
+  - Enterprise endpoints protected: admin scopes for tenant/project CRUD,
+    `sso:admin` for SSO cleanup, any valid key for read endpoints
+  - 20 auth middleware tests (no key, invalid key, read-only, admin, unprotected)
+
+
 ## [1.9.0] - 2026-08-08
 
 ### Added

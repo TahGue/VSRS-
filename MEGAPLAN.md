@@ -309,7 +309,17 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 - 24 API tests
 - 1232 total tests
 
-## Future Roadmap (Post-30)
+### Phase 31: API Authentication Middleware ✅
+- X-API-Key header validation via require_api_key dependency
+- Scope-based access control via require_scope dependency
+- Rate limiting integrated into auth flow (429 with Retry-After header)
+- Audit logging of API key validations
+- Enterprise endpoints protected: admin scopes for tenant/project CRUD,
+  sso:admin for SSO cleanup, any valid key for read endpoints
+- 20 auth middleware tests (no key, invalid key, read-only, admin, unprotected)
+- 1252 total tests
+
+## Future Roadmap (Post-31)
 
 All planned phases complete. The VSRS project now includes:
 - Core pipeline with provenance tracking
@@ -333,11 +343,11 @@ All planned phases complete. The VSRS project now includes:
 | Source files | 95+ Python files |
 | Source lines | ~24,000 LOC |
 | Test files | 24 test files |
-| Test count | 1232 tests |
-| Modules | 23 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval, plugins, languages, distributed, finetuning, enterprise, api.websocket, repo.tree_sitter_index, enterprise.tenant, enterprise.sso, distributed.pool, api.enterprise_routes) + VSCode extension + Web dashboard |
+| Test count | 1252 tests |
+| Modules | 24 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval, plugins, languages, distributed, finetuning, enterprise, api.websocket, repo.tree_sitter_index, enterprise.tenant, enterprise.sso, distributed.pool, api.enterprise_routes, api.auth) + VSCode extension + Web dashboard |
 | CLI commands | 25+ |
 | API endpoints | 25+ |
-| Phases completed | 30 of 30 |
+| Phases completed | 31 of 31 |
 | Dependencies | pydantic, typer, rich, pyyaml |
 | Optional deps | fastapi, uvicorn, httpx, openai, anthropic |
 
@@ -366,3 +376,4 @@ All planned phases complete. The VSRS project now includes:
 | 1.7.0 | 28 | Documentation & integration polish |
 | 1.8.0 | 29 | Enterprise CLI commands (tenant, SSO, pool) |
 | 1.9.0 | 30 | Enterprise API endpoints |
+| 2.0.0 | 31 | API authentication middleware |

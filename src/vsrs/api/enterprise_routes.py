@@ -8,9 +8,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
+from vsrs.api.auth import require_api_key, require_scope
 from vsrs.enterprise import TenantManager, TenantNotFoundError, ResourceQuota
 from vsrs.enterprise.sso import SSOManager
 
@@ -147,7 +148,7 @@ def get_sso_manager() -> SSOManager:
 # --- Tenant endpoints ---
 
 
-@router.post("/tenants", response_model=TenantResponse)
+@router.post("/tenants", response_model=TenantResponse, dependencies=[Depends(require_scope("tenant:admin"))])
 def create_tenant(req: TenantCreateRequest) -> TenantResponse:
     """Create a new tenant with resource quotas."""
     mgr = get_tenant_manager()
@@ -169,7 +170,7 @@ def create_tenant(req: TenantCreateRequest) -> TenantResponse:
     )
 
 
-@router.get("/tenants", response_model=TenantListResponse)
+@router.get("/tenants", response_model=TenantListResponse, dependencies=[Depends(require_api_key)])
 def list_tenants() -> TenantListResponse:
     """List all tenants."""
     mgr = get_tenant_manager()
@@ -190,7 +191,7 @@ def list_tenants() -> TenantListResponse:
     )
 
 
-@router.get("/tenants/{tenant_id}", response_model=TenantResponse)
+@router.get("/tenants/{tenant_id}", response_model=TenantResponse, dependencies=[Depends(require_api_key)])
 def get_tenant(tenant_id: str) -> TenantResponse:
     """Get tenant details."""
     mgr = get_tenant_manager()
@@ -208,7 +209,7 @@ def get_tenant(tenant_id: str) -> TenantResponse:
     )
 
 
-@router.get("/tenants/{tenant_id}/usage", response_model=TenantUsageResponse)
+@router.get("/tenants/{tenant_id}/usage", response_model=TenantUsageResponse, dependencies=[Depends(require_api_key)])
 def get_tenant_usage(tenant_id: str) -> TenantUsageResponse:
     """Get tenant resource usage."""
     mgr = get_tenant_manager()
@@ -227,7 +228,7 @@ def get_tenant_usage(tenant_id: str) -> TenantUsageResponse:
     )
 
 
-@router.post("/tenants/{tenant_id}/suspend", response_model=TenantResponse)
+@router.post("/tenants/{tenant_id}/suspend", response_model=TenantResponse, dependencies=[Depends(require_scope("tenant:admin"))])
 def suspend_tenant(tenant_id: str) -> TenantResponse:
     """Suspend a tenant."""
     mgr = get_tenant_manager()
@@ -245,7 +246,7 @@ def suspend_tenant(tenant_id: str) -> TenantResponse:
     )
 
 
-@router.post("/tenants/{tenant_id}/reactivate", response_model=TenantResponse)
+@router.post("/tenants/{tenant_id}/reactivate", response_model=TenantResponse, dependencies=[Depends(require_scope("tenant:admin"))])
 def reactivate_tenant(tenant_id: str) -> TenantResponse:
     """Reactivate a suspended tenant."""
     mgr = get_tenant_manager()
@@ -263,7 +264,7 @@ def reactivate_tenant(tenant_id: str) -> TenantResponse:
     )
 
 
-@router.delete("/tenants/{tenant_id}")
+@router.delete("/tenants/{tenant_id}", dependencies=[Depends(require_scope("tenant:admin"))])
 def delete_tenant(tenant_id: str) -> dict[str, str]:
     """Delete a tenant and all its projects."""
     mgr = get_tenant_manager()
@@ -277,7 +278,7 @@ def delete_tenant(tenant_id: str) -> dict[str, str]:
 # --- Project endpoints ---
 
 
-@router.post("/tenants/{tenant_id}/projects", response_model=ProjectResponse)
+@router.post("/tenants/{tenant_id}/projects", response_model=ProjectResponse, dependencies=[Depends(require_scope("tenant:admin"))])
 def create_project(tenant_id: str, req: ProjectCreateRequest) -> ProjectResponse:
     """Create a project within a tenant."""
     mgr = get_tenant_manager()
@@ -296,7 +297,7 @@ def create_project(tenant_id: str, req: ProjectCreateRequest) -> ProjectResponse
     )
 
 
-@router.get("/tenants/{tenant_id}/projects", response_model=ProjectListResponse)
+@router.get("/tenants/{tenant_id}/projects", response_model=ProjectListResponse, dependencies=[Depends(require_api_key)])
 def list_projects(tenant_id: str) -> ProjectListResponse:
     """List all projects for a tenant."""
     mgr = get_tenant_manager()
@@ -320,7 +321,7 @@ def list_projects(tenant_id: str) -> ProjectListResponse:
     )
 
 
-@router.delete("/tenants/{tenant_id}/projects/{project_id}")
+@router.delete("/tenants/{tenant_id}/projects/{project_id}", dependencies=[Depends(require_scope("tenant:admin"))])
 def delete_project(tenant_id: str, project_id: str) -> dict[str, str]:
     """Delete a project from a tenant."""
     mgr = get_tenant_manager()
@@ -335,7 +336,7 @@ def delete_project(tenant_id: str, project_id: str) -> dict[str, str]:
 # --- SSO endpoints ---
 
 
-@router.get("/sso/providers", response_model=SSOProviderListResponse)
+@router.get("/sso/providers", response_model=SSOProviderListResponse, dependencies=[Depends(require_api_key)])
 def list_sso_providers() -> SSOProviderListResponse:
     """List configured SSO providers."""
     mgr = get_sso_manager()
@@ -349,7 +350,7 @@ def list_sso_providers() -> SSOProviderListResponse:
     )
 
 
-@router.get("/sso/sessions", response_model=SSOSessionListResponse)
+@router.get("/sso/sessions", response_model=SSOSessionListResponse, dependencies=[Depends(require_api_key)])
 def list_sso_sessions() -> SSOSessionListResponse:
     """List active SSO sessions."""
     mgr = get_sso_manager()
@@ -369,7 +370,7 @@ def list_sso_sessions() -> SSOSessionListResponse:
     )
 
 
-@router.get("/sso/users", response_model=SSOUserListResponse)
+@router.get("/sso/users", response_model=SSOUserListResponse, dependencies=[Depends(require_api_key)])
 def list_sso_users() -> SSOUserListResponse:
     """List SSO-provisioned users."""
     mgr = get_sso_manager()
@@ -383,7 +384,7 @@ def list_sso_users() -> SSOUserListResponse:
     )
 
 
-@router.post("/sso/cleanup", response_model=SSOCleanupResponse)
+@router.post("/sso/cleanup", response_model=SSOCleanupResponse, dependencies=[Depends(require_scope("sso:admin"))])
 def cleanup_sso_sessions() -> SSOCleanupResponse:
     """Remove expired SSO sessions."""
     mgr = get_sso_manager()
@@ -394,7 +395,7 @@ def cleanup_sso_sessions() -> SSOCleanupResponse:
 # --- Pool endpoints ---
 
 
-@router.get("/pool/stats", response_model=PoolStatsResponse)
+@router.get("/pool/stats", response_model=PoolStatsResponse, dependencies=[Depends(require_api_key)])
 def get_pool_stats() -> PoolStatsResponse:
     """Get worker pool statistics.
 
