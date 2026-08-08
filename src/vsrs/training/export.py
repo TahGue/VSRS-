@@ -1,6 +1,14 @@
 """Trajectory export: export normalized successful/failed trajectories (Section 15.1).
 
-TODO: Phase 8 - full export pipeline implementation.
+Exports task runs as normalized training trajectories with:
+- Full task and repository context
+- Retrieved evidence items
+- Reasoning hypotheses and patch attempts
+- Verification results and critic findings
+- Provenance graph edges
+- Event timeline
+- Repair decisions
+- Final decision and status
 """
 
 from __future__ import annotations
@@ -10,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from vsrs.core.store import Store
+from vsrs.provenance import ProvenanceStore
 
 
 class TrajectoryExporter:
@@ -48,7 +57,39 @@ class TrajectoryExporter:
             for finding in findings:
                 critic_findings.append(finding.model_dump(mode="json"))
 
+        # Build provenance edges
+        prov = ProvenanceStore(self.store)
+        prov_edges = []
+        try:
+            prov_edges = [e.model_dump() for e in prov.trace("run", run_id)]
+        except Exception:
+            pass
+
+        # Build event timeline
+        event_timeline = [
+            {
+                "event_type": e.event_type,
+                "state": e.state.value if e.state else None,
+                "timestamp": str(e.timestamp),
+                "metadata": e.metadata,
+            }
+            for e in events
+        ]
+
+        # Build repair decisions
+        repair_decisions = [
+            {
+                "event_type": e.event_type,
+                "state": e.state.value if e.state else None,
+                "timestamp": str(e.timestamp),
+                "metadata": e.metadata,
+            }
+            for e in events
+            if e.event_type == "state_change" and e.state and e.state.value == "revising"
+        ]
+
         return {
+            "run_id": run_id,
             "task": task.model_dump(mode="json") if task else None,
             "repository_snapshot_id": run.repo_snapshot_id,
             "retrieved_evidence": [e.model_dump(mode="json") for e in evidence],
@@ -58,12 +99,12 @@ class TrajectoryExporter:
             "patch_attempts": [p.model_dump(mode="json") for p in patches],
             "verification_results": verification_results,
             "critic_findings": critic_findings,
-            "repair_decisions": [
-                e.model_dump(mode="json") for e in events
-                if e.event_type == "state_change" and e.state.value == "revising"
-            ],
+            "repair_decisions": repair_decisions,
+            "provenance_edges": prov_edges,
+            "event_timeline": event_timeline,
             "final_patch": patches[-1].model_dump(mode="json") if patches else None,
             "final_status": decision.status.value if decision else run.state.value,
+            "final_decision": decision.model_dump(mode="json") if decision else None,
             "events": [e.model_dump(mode="json") for e in events],
         }
 
@@ -78,3 +119,38 @@ class TrajectoryExporter:
                     f.write(json.dumps(trajectory, default=str) + "\n")
                     count += 1
         return count
+
+    def export_all(self, output_path: Path) -> int:
+        """Export all runs in the store as JSONL. Returns count exported."""
+        from vsrs.core.schemas import TaskRun
+        rows = self.store._conn.execute("SELECT id FROM task_runs").fetchall()
+        run_ids = [row["id"] for row in rows]
+        return self.export_to_jsonl(run_ids, output_path)
+
+    def export_filtered(
+        self,
+        output_path: Path,
+        statuses: list[str] | None = None,
+    ) -> int:
+        """Export runs filtered by final status as JSONL.
+
+        Args:
+            output_path: Where to write the JSONL file.
+            statuses: List of final statuses to include (e.g. ['verified_candidate']).
+                      If None, exports all runs.
+
+        Returns:
+            Number of trajectories exported.
+        """
+        if statuses is None:
+            return self.export_all(output_path)
+
+        rows = self.store._conn.execute("SELECT id FROM task_runs").fetchall()
+        run_ids = []
+        for row in rows:
+            run_id = row["id"]
+            traj = self.export_run(run_id)
+            if traj and traj.get("final_status") in statuses:
+                run_ids.append(run_id)
+
+        return self.export_to_jsonl(run_ids, output_path)
