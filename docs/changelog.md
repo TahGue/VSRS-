@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.6.0] - 2026-08-08
+
+### Added
+- Worker pool with resource allocation and auto-scaling
+  - ResourceSpec: CPU, memory, GPU, disk with can_fit/subtract/add operations
+  - WorkerInfo: runtime state (idle, busy, draining, stopped, unhealthy), capacity, available resources
+  - WorkerPool: resource-aware job scheduling, auto-scaling based on queue depth
+  - PoolConfig: min/max workers, scale up/down thresholds, health check intervals
+  - Health monitoring: heartbeat-based unhealthy worker detection and replacement
+  - Graceful shutdown with worker draining
+  - Thread-safe with RLock for all operations
+  - InsufficientResourcesError when no worker can handle a job
+  - Pool stats: worker count, idle/busy/unhealthy counts, total/available capacity
+  - 55 tests
+
+
 ## [1.5.0] - 2026-08-08
 
 ### Added

@@ -2,7 +2,7 @@
 
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests: 1122](https://img.shields.io/badge/tests-1122-brightgreen.svg)](#testing)
+[![Tests: 1177](https://img.shields.io/badge/tests-1177-brightgreen.svg)](#testing)
 
 An evidence-grounded coding reasoning model and verification platform. Generated code is a hypothesis, not a fact — the system earns a "verified" status only through evidence: repository grounding, deterministic checks, executable tests, and an auditable provenance trail.
 

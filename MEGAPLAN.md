@@ -272,10 +272,32 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 - Error hierarchy: SSOError, SSOAuthenticationError, SSOTokenExpiredError, SSOProviderNotFoundError
 - 50 tests
 
-## Future Roadmap (Post-26)
+### Phase 27: Worker Pool with Resource Allocation and Auto-Scaling ✅
+- ResourceSpec: CPU, memory, GPU, disk with can_fit/subtract/add operations
+- WorkerInfo: runtime state (idle, busy, draining, stopped, unhealthy), capacity tracking
+- WorkerPool: resource-aware job scheduling, auto-scaling based on queue depth
+- PoolConfig: min/max workers, scale up/down thresholds, health check intervals
+- Health monitoring: heartbeat-based unhealthy worker detection and replacement
+- Graceful shutdown with worker draining
+- Thread-safe with RLock for all operations
+- InsufficientResourcesError when no worker can handle a job
+- Pool stats: worker count, idle/busy/unhealthy counts, total/available capacity
+- 55 tests
 
-### Advanced Features
-- Horizontal scaling of verification workers with resource allocation
+## Future Roadmap (Post-27)
+
+All planned phases complete. The VSRS project now includes:
+- Core pipeline with provenance tracking
+- Repository intelligence with tree-sitter multi-language indexing
+- LLM-powered reasoning, verification, repair, and review
+- Web dashboard with real-time WebSocket streaming
+- VSCode extension
+- Enterprise features: RBAC, audit logging, API keys, rate limiting
+- Multi-tenant project isolation with resource quotas
+- SSO integration (SAML 2.0, OpenID Connect)
+- Distributed execution with worker pool auto-scaling
+- Training data export, fine-tuning, evaluation, and benchmarking
+- Plugin system and multi-language support
 
 ---
 
@@ -286,10 +308,10 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 | Source files | 95+ Python files |
 | Source lines | ~24,000 LOC |
 | Test files | 24 test files |
-| Test count | 1122 tests |
-| Modules | 21 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval, plugins, languages, distributed, finetuning, enterprise, api.websocket, repo.tree_sitter_index, enterprise.tenant, enterprise.sso) + VSCode extension + Web dashboard |
+| Test count | 1177 tests |
+| Modules | 22 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval, plugins, languages, distributed, finetuning, enterprise, api.websocket, repo.tree_sitter_index, enterprise.tenant, enterprise.sso, distributed.pool) + VSCode extension + Web dashboard |
 | CLI commands | 17+ |
-| Phases completed | 26 of 26 |
+| Phases completed | 27 of 27 |
 | Dependencies | pydantic, typer, rich, pyyaml |
 | Optional deps | fastapi, uvicorn, httpx, openai, anthropic |
 
@@ -314,3 +336,4 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 | 1.3.0 | 24 | Tree-sitter structural indexing |
 | 1.4.0 | 25 | Multi-tenant project isolation |
 | 1.5.0 | 26 | SSO integration (SAML, OIDC) |
+| 1.6.0 | 27 | Worker pool with resource allocation and auto-scaling |
