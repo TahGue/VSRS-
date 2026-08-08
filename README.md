@@ -8,6 +8,7 @@ An evidence-grounded coding reasoning model and verification platform. Generated
 
 ## Documentation
 
+- [**User Guide**](docs/user-guide.md) — Complete guide: installation, configuration, CLI, API, dashboard, extension, and more
 - [Architecture](docs/architecture.md) — Pipeline diagrams, module reference, data flow
 - [API Reference](docs/api-reference.md) — REST API endpoints with examples
 - [Contributing Guide](docs/contributing.md) — Development setup, coding standards, PR process
