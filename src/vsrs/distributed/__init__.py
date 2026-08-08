@@ -13,11 +13,13 @@ from vsrs.distributed.base import (
     TaskJob,
     TaskQueue,
 )
+from vsrs.distributed.benchmark import DistributedBenchmarkRunner
 from vsrs.distributed.memory import InMemoryQueue
 from vsrs.distributed.redis_queue import RedisQueue
 from vsrs.distributed.worker import Worker
 
 __all__ = [
+    "DistributedBenchmarkRunner",
     "InMemoryQueue",
     "JobResult",
     "JobStatus",
