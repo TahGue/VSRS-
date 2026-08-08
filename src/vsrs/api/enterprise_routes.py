@@ -11,7 +11,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from vsrs.api.auth import require_api_key, require_scope
+from vsrs.api.auth import require_api_key, require_scope, get_key_manager, get_auditor
 from vsrs.enterprise import TenantManager, TenantNotFoundError, ResourceQuota
 from vsrs.enterprise.sso import SSOManager
 
@@ -414,3 +414,164 @@ def get_pool_stats() -> PoolStatsResponse:
         total_capacity={"cpu": 0.0, "memory_mb": 0, "gpu": 0, "disk_mb": 0},
         total_available={"cpu": 0.0, "memory_mb": 0, "gpu": 0, "disk_mb": 0},
     )
+
+
+# --- API Key Management endpoints ---
+
+
+class APIKeyCreateRequest(BaseModel):
+    user_id: str = Field(..., description="User ID for this key")
+    name: str = Field("", description="Human-readable key name")
+    scopes: list[str] = Field(default_factory=list, description="Permission scopes")
+
+
+class APIKeyResponse(BaseModel):
+    id: str
+    user_id: str
+    name: str
+    scopes: list[str]
+    valid: bool
+    created_at: str
+    expires_at: str | None = None
+
+
+class APIKeyCreateResponse(BaseModel):
+    key: APIKeyResponse
+    raw_key: str
+
+
+class APIKeyListResponse(BaseModel):
+    keys: list[APIKeyResponse]
+    count: int
+
+
+class APIKeyCountResponse(BaseModel):
+    count: int
+
+
+class APIKeyRevokeResponse(BaseModel):
+    revoked: bool
+    key_id: str
+
+
+@router.post("/keys", response_model=APIKeyCreateResponse, dependencies=[Depends(require_scope("key:admin"))])
+def create_api_key(req: APIKeyCreateRequest) -> APIKeyCreateResponse:
+    """Create a new API key. Requires key:admin scope."""
+    mgr = get_key_manager()
+    raw_key, api_key = mgr.create_key(user_id=req.user_id, name=req.name, scopes=req.scopes)
+    return APIKeyCreateResponse(
+        key=APIKeyResponse(
+            id=api_key.id,
+            user_id=api_key.user_id,
+            name=api_key.name,
+            scopes=api_key.scopes,
+            valid=api_key.is_valid,
+            created_at=api_key.created_at.isoformat(),
+            expires_at=api_key.expires_at.isoformat() if api_key.expires_at else None,
+        ),
+        raw_key=raw_key,
+    )
+
+
+@router.get("/keys", response_model=APIKeyListResponse, dependencies=[Depends(require_api_key)])
+def list_api_keys(user_id: str | None = None) -> APIKeyListResponse:
+    """List API keys, optionally filtered by user. Requires valid API key."""
+    mgr = get_key_manager()
+    keys = mgr.list_keys(user_id=user_id)
+    return APIKeyListResponse(
+        keys=[
+            APIKeyResponse(
+                id=k.id,
+                user_id=k.user_id,
+                name=k.name,
+                scopes=k.scopes,
+                valid=k.is_valid,
+                created_at=k.created_at.isoformat(),
+                expires_at=k.expires_at.isoformat() if k.expires_at else None,
+            )
+            for k in keys
+        ],
+        count=len(keys),
+    )
+
+
+@router.get("/keys/count", response_model=APIKeyCountResponse, dependencies=[Depends(require_api_key)])
+def count_api_keys() -> APIKeyCountResponse:
+    """Count total API keys. Requires valid API key."""
+    mgr = get_key_manager()
+    return APIKeyCountResponse(count=mgr.count())
+
+
+@router.delete("/keys/{key_id}", response_model=APIKeyRevokeResponse, dependencies=[Depends(require_scope("key:admin"))])
+def revoke_api_key(key_id: str) -> APIKeyRevokeResponse:
+    """Revoke an API key. Requires key:admin scope."""
+    mgr = get_key_manager()
+    revoked = mgr.revoke(key_id)
+    if not revoked:
+        raise HTTPException(status_code=404, detail=f"API key not found: {key_id}")
+    return APIKeyRevokeResponse(revoked=True, key_id=key_id)
+
+
+# --- Audit Log endpoints ---
+
+
+class AuditEventResponse(BaseModel):
+    event_type: str
+    user_id: str
+    resource: str
+    action: str
+    success: bool
+    timestamp: str
+    details: dict[str, Any]
+    ip_address: str
+    request_id: str
+
+
+class AuditListResponse(BaseModel):
+    events: list[AuditEventResponse]
+    count: int
+
+
+class AuditCountResponse(BaseModel):
+    count: int
+
+
+@router.get("/audit", response_model=AuditListResponse, dependencies=[Depends(require_api_key)])
+def list_audit_events(
+    event_type: str | None = None,
+    user_id: str | None = None,
+    resource: str | None = None,
+    limit: int = 100,
+) -> AuditListResponse:
+    """Query audit events with filters. Requires valid API key."""
+    auditor = get_auditor()
+    events = auditor.query(
+        event_type=event_type,
+        user_id=user_id,
+        resource=resource,
+        limit=limit,
+    )
+    return AuditListResponse(
+        events=[
+            AuditEventResponse(
+                event_type=e.event_type,
+                user_id=e.user_id,
+                resource=e.resource,
+                action=e.action,
+                success=e.success,
+                timestamp=e.timestamp.isoformat(),
+                details=e.details,
+                ip_address=e.ip_address,
+                request_id=e.request_id,
+            )
+            for e in events
+        ],
+        count=len(events),
+    )
+
+
+@router.get("/audit/count", response_model=AuditCountResponse, dependencies=[Depends(require_api_key)])
+def count_audit_events() -> AuditCountResponse:
+    """Count total audit events. Requires valid API key."""
+    auditor = get_auditor()
+    return AuditCountResponse(count=auditor.count())

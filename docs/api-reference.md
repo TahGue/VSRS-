@@ -449,6 +449,55 @@ Remove expired SSO sessions. **Requires `sso:admin` scope.**
 
 Get worker pool statistics. **Requires valid API key.**
 
+### API Key Management
+
+#### `POST /api/v1/keys`
+
+Create a new API key. **Requires `key:admin` scope.**
+
+**Request**:
+```json
+{
+  "user_id": "new-user",
+  "name": "my-key",
+  "scopes": ["read", "write"]
+}
+```
+
+**Response**:
+```json
+{
+  "key": {"id": "...", "user_id": "new-user", "scopes": ["read", "write"], "valid": true},
+  "raw_key": "vsrs_..."
+}
+```
+
+#### `GET /api/v1/keys`
+
+List API keys, optionally filtered by user. **Requires valid API key.**
+
+**Query params**: `user_id` (optional)
+
+#### `GET /api/v1/keys/count`
+
+Count total API keys. **Requires valid API key.**
+
+#### `DELETE /api/v1/keys/{id}`
+
+Revoke an API key. **Requires `key:admin` scope.**
+
+### Audit Log
+
+#### `GET /api/v1/audit`
+
+Query audit events with filters. **Requires valid API key.**
+
+**Query params**: `event_type`, `user_id`, `resource`, `limit` (default 100)
+
+#### `GET /api/v1/audit/count`
+
+Count total audit events. **Requires valid API key.**
+
 ---
 
 ## CLI Commands

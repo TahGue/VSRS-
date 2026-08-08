@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [2.2.0] - 2026-08-08
+
+### Added
+- API key & audit management REST endpoints
+  - `POST /api/v1/keys` — create API key (requires `key:admin` scope)
+  - `GET /api/v1/keys` — list keys with optional user filter
+  - `GET /api/v1/keys/count` — count total keys
+  - `DELETE /api/v1/keys/{id}` — revoke key (requires `key:admin` scope)
+  - `GET /api/v1/audit` — query audit events with filters
+  - `GET /api/v1/audit/count` — count total audit events
+  - 15 API tests including integration (create key → use it → revoke → verify invalidation)
+
+
 ## [2.1.0] - 2026-08-08
 
 ### Added
