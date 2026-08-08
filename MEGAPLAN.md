@@ -291,7 +291,15 @@ This document covers all 15 phases of the VSRS project — all phases are comple
   tenant+SSO, pool+queue, and full end-to-end enterprise workflow
 - 1191 total tests
 
-## Future Roadmap (Post-28)
+### Phase 29: Enterprise CLI Commands ✅
+- `vsrs tenant create/list/show/suspend/reactivate/delete`
+- `vsrs sso list-providers/list-sessions/cleanup/list-users`
+- `vsrs pool stats`
+- TenantNotFoundError handling with graceful error messages
+- 17 CLI tests
+- 1208 total tests
+
+## Future Roadmap (Post-29)
 
 All planned phases complete. The VSRS project now includes:
 - Core pipeline with provenance tracking
@@ -315,10 +323,10 @@ All planned phases complete. The VSRS project now includes:
 | Source files | 95+ Python files |
 | Source lines | ~24,000 LOC |
 | Test files | 24 test files |
-| Test count | 1191 tests |
+| Test count | 1208 tests |
 | Modules | 22 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval, plugins, languages, distributed, finetuning, enterprise, api.websocket, repo.tree_sitter_index, enterprise.tenant, enterprise.sso, distributed.pool) + VSCode extension + Web dashboard |
-| CLI commands | 17+ |
-| Phases completed | 28 of 28 |
+| CLI commands | 25+ |
+| Phases completed | 29 of 29 |
 | Dependencies | pydantic, typer, rich, pyyaml |
 | Optional deps | fastapi, uvicorn, httpx, openai, anthropic |
 
@@ -345,3 +353,4 @@ All planned phases complete. The VSRS project now includes:
 | 1.5.0 | 26 | SSO integration (SAML, OIDC) |
 | 1.6.0 | 27 | Worker pool with resource allocation and auto-scaling |
 | 1.7.0 | 28 | Documentation & integration polish |
+| 1.8.0 | 29 | Enterprise CLI commands (tenant, SSO, pool) |

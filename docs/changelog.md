@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.8.0] - 2026-08-08
+
+### Added
+- Enterprise CLI commands
+  - `vsrs tenant create/list/show/suspend/reactivate/delete`
+  - `vsrs sso list-providers/list-sessions/cleanup/list-users`
+  - `vsrs pool stats`
+  - TenantNotFoundError handling with graceful error messages
+  - 17 CLI tests
+
+
 ## [1.7.0] - 2026-08-08
 
 ### Added

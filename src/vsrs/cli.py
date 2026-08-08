@@ -743,5 +743,264 @@ def config_validate(
         console.print("[green]Configuration is valid.[/green]")
 
 
+# --- Enterprise CLI ---
+
+tenant_app = typer.Typer(help="Tenant management")
+app.add_typer(tenant_app, name="tenant")
+
+sso_app = typer.Typer(help="SSO provider management")
+app.add_typer(sso_app, name="sso")
+
+pool_app = typer.Typer(help="Worker pool status")
+app.add_typer(pool_app, name="pool")
+
+
+@tenant_app.command("create")
+def tenant_create(
+    tenant_id: str = typer.Option(..., "--id", help="Unique tenant ID"),
+    name: str = typer.Option(..., "--name", help="Tenant display name"),
+    slug: str = typer.Option("", "--slug", help="URL-friendly slug (defaults to id)"),
+    max_projects: int = typer.Option(10, "--max-projects", help="Max projects"),
+    max_runs_per_day: int = typer.Option(100, "--max-runs-day", help="Max runs per day"),
+    max_concurrent_runs: int = typer.Option(5, "--max-concurrent", help="Max concurrent runs"),
+    max_storage_mb: int = typer.Option(1024, "--max-storage-mb", help="Max storage in MB"),
+    max_api_keys: int = typer.Option(10, "--max-api-keys", help="Max API keys"),
+) -> None:
+    """Create a new tenant with resource quotas."""
+
+    from vsrs.enterprise import TenantManager, ResourceQuota
+
+    mgr = TenantManager()
+    quota = ResourceQuota(
+        max_projects=max_projects,
+        max_runs_per_day=max_runs_per_day,
+        max_concurrent_runs=max_concurrent_runs,
+        max_storage_mb=max_storage_mb,
+        max_api_keys=max_api_keys,
+    )
+    tenant = mgr.create_tenant(tenant_id, name, slug or tenant_id, quota=quota)
+    console.print(f"[green]Tenant created:[/green] {tenant.id} ({tenant.name})")
+    console.print(f"  Status: {tenant.status.value}")
+    console.print(f"  Quota: {quota.to_dict()}")
+
+
+@tenant_app.command("list")
+def tenant_list() -> None:
+    """List all tenants."""
+
+    from vsrs.enterprise import TenantManager
+
+    mgr = TenantManager()
+    tenants = mgr.list_tenants()
+    if not tenants:
+        console.print("[yellow]No tenants found.[/yellow]")
+        return
+
+    table = Table(title="Tenants")
+    table.add_column("ID", style="cyan")
+    table.add_column("Name", style="white")
+    table.add_column("Status", style="green")
+    table.add_column("Projects", justify="right")
+    table.add_column("Created", style="dim")
+
+    for t in tenants:
+        table.add_row(t.id, t.name, t.status.value, str(len(mgr.list_projects(t.id))), t.created_at.isoformat()[:10])
+
+    console.print(table)
+
+
+@tenant_app.command("show")
+def tenant_show(
+    tenant_id: str = typer.Argument(..., help="Tenant ID"),
+) -> None:
+    """Show tenant details and usage."""
+
+    from vsrs.enterprise import TenantManager, TenantNotFoundError
+
+    mgr = TenantManager()
+    try:
+        tenant = mgr.get_tenant(tenant_id)
+    except TenantNotFoundError:
+        console.print(f"[red]Tenant not found: {tenant_id}[/red]")
+        raise typer.Exit(1)
+
+    console.print(Panel(
+        f"ID: {tenant.id}\nName: {tenant.name}\nStatus: {tenant.status.value}\n"
+        f"Slug: {tenant.slug}\nCreated: {tenant.created_at.isoformat()}",
+        title=f"Tenant: {tenant.name}",
+    ))
+
+    usage = mgr.get_usage(tenant_id)
+    console.print(f"\n[bold]Usage:[/bold]")
+    console.print(f"  Projects: {usage.project_count}")
+    console.print(f"  Runs today: {usage.runs_today}")
+    console.print(f"  Concurrent runs: {usage.concurrent_runs}")
+    console.print(f"  Storage: {usage.storage_used_mb} MB")
+    console.print(f"  API keys: {usage.api_key_count}")
+
+
+@tenant_app.command("suspend")
+def tenant_suspend(
+    tenant_id: str = typer.Argument(..., help="Tenant ID"),
+) -> None:
+    """Suspend a tenant."""
+
+    from vsrs.enterprise import TenantManager, TenantNotFoundError
+
+    mgr = TenantManager()
+    try:
+        mgr.suspend_tenant(tenant_id)
+    except TenantNotFoundError:
+        console.print(f"[red]Tenant not found: {tenant_id}[/red]")
+        raise typer.Exit(1)
+    console.print(f"[yellow]Tenant suspended:[/yellow] {tenant_id}")
+
+
+@tenant_app.command("reactivate")
+def tenant_reactivate(
+    tenant_id: str = typer.Argument(..., help="Tenant ID"),
+) -> None:
+    """Reactivate a suspended tenant."""
+
+    from vsrs.enterprise import TenantManager, TenantNotFoundError
+
+    mgr = TenantManager()
+    try:
+        mgr.reactivate_tenant(tenant_id)
+    except TenantNotFoundError:
+        console.print(f"[red]Tenant not found: {tenant_id}[/red]")
+        raise typer.Exit(1)
+    console.print(f"[green]Tenant reactivated:[/green] {tenant_id}")
+
+
+@tenant_app.command("delete")
+def tenant_delete(
+    tenant_id: str = typer.Argument(..., help="Tenant ID"),
+    force: bool = typer.Option(False, "--force", "-f", help="Skip confirmation"),
+) -> None:
+    """Delete a tenant and all its projects."""
+
+    if not force:
+        confirm = typer.confirm(f"Delete tenant '{tenant_id}' and all its projects?")
+        if not confirm:
+            console.print("[yellow]Cancelled.[/yellow]")
+            raise typer.Exit(0)
+
+    from vsrs.enterprise import TenantManager, TenantNotFoundError
+
+    mgr = TenantManager()
+    try:
+        mgr.delete_tenant(tenant_id)
+    except TenantNotFoundError:
+        console.print(f"[red]Tenant not found: {tenant_id}[/red]")
+        raise typer.Exit(1)
+    console.print(f"[red]Tenant deleted:[/red] {tenant_id}")
+
+
+@sso_app.command("list-providers")
+def sso_list_providers() -> None:
+    """List configured SSO providers."""
+
+    from vsrs.enterprise import SSOManager
+
+    mgr = SSOManager()
+    providers = mgr.list_providers()
+    if not providers:
+        console.print("[yellow]No SSO providers configured.[/yellow]")
+        return
+
+    table = Table(title="SSO Providers")
+    table.add_column("ID", style="cyan")
+    table.add_column("Name", style="white")
+    table.add_column("Protocol", style="green")
+
+    for p in providers:
+        table.add_row(p["id"], p["name"], p["protocol"])
+
+    console.print(table)
+
+
+@sso_app.command("list-sessions")
+def sso_list_sessions() -> None:
+    """List active SSO sessions."""
+
+    from vsrs.enterprise import SSOManager
+
+    mgr = SSOManager()
+    sessions = mgr.list_active_sessions()
+    if not sessions:
+        console.print("[yellow]No active SSO sessions.[/yellow]")
+        return
+
+    table = Table(title="Active SSO Sessions")
+    table.add_column("Session ID", style="cyan")
+    table.add_column("User ID", style="white")
+    table.add_column("Provider", style="green")
+    table.add_column("Protocol", style="blue")
+    table.add_column("Expires", style="dim")
+
+    for s in sessions:
+        table.add_row(
+            s.id[:16] + "...",
+            s.user_id[:16] + "...",
+            s.provider_id,
+            s.protocol.value,
+            s.expires_at.isoformat()[:19] if s.expires_at else "N/A",
+        )
+
+    console.print(table)
+
+
+@sso_app.command("cleanup")
+def sso_cleanup() -> None:
+    """Remove expired SSO sessions."""
+
+    from vsrs.enterprise import SSOManager
+
+    mgr = SSOManager()
+    removed = mgr.cleanup_expired_sessions()
+    console.print(f"[green]Removed {removed} expired session(s).[/green]")
+
+
+@sso_app.command("list-users")
+def sso_list_users() -> None:
+    """List SSO-provisioned users."""
+
+    from vsrs.enterprise import SSOManager
+
+    mgr = SSOManager()
+    users = mgr.list_users()
+    if not users:
+        console.print("[yellow]No SSO users provisioned.[/yellow]")
+        return
+
+    table = Table(title="SSO Users")
+    table.add_column("User ID", style="cyan")
+    table.add_column("Email", style="white")
+    table.add_column("Role", style="green")
+    table.add_column("Active", style="blue")
+
+    for u in users:
+        table.add_row(u.id[:16] + "...", u.email, u.role, "Yes" if u.active else "No")
+
+    console.print(table)
+
+
+@pool_app.command("stats")
+def pool_stats() -> None:
+    """Show worker pool statistics (requires a running pool)."""
+
+    console.print("[yellow]Worker pool stats are available at runtime when a pool is active.[/yellow]")
+    console.print("\nTo start a pool programmatically:")
+    console.print("""
+from vsrs.distributed import WorkerPool, PoolConfig, InMemoryQueue
+
+pool = WorkerPool(InMemoryQueue(), config=PoolConfig(min_workers=2))
+pool.start()
+print(pool.pool_stats())
+pool.stop()
+""")
+
+
 if __name__ == "__main__":
     app()

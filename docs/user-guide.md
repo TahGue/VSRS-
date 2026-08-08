@@ -259,6 +259,27 @@ vsrs config init
 vsrs config validate
 ```
 
+### Enterprise commands
+
+```bash
+# Tenant management
+vsrs tenant create --id acme --name "Acme Corp" --max-projects 20
+vsrs tenant list
+vsrs tenant show <tenant_id>
+vsrs tenant suspend <tenant_id>
+vsrs tenant reactivate <tenant_id>
+vsrs tenant delete <tenant_id> --force
+
+# SSO management
+vsrs sso list-providers
+vsrs sso list-sessions
+vsrs sso list-users
+vsrs sso cleanup
+
+# Worker pool
+vsrs pool stats
+```
+
 ### Command options
 
 ```bash
