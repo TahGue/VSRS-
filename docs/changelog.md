@@ -7,11 +7,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [1.1.0] - 2026-08-08
+
 ### Added
-- LLM integration with OpenAI, Anthropic, and stub providers
-- Cost tracking for LLM API calls
-- Prompt rendering and structured output parsing
-- LLM-backed reasoner and repair reasoner with fallback
+- Web UI dashboard (React 18 + Vite 5 + React Router 6)
+  - Runs page with list and create-new-run form
+  - Run detail page with verification checks, diff viewer, task info
+  - Benchmarks page for browsing benchmark suites
+  - Settings page for viewing configuration
+  - Dark theme with GitHub-inspired design
+  - API proxy for development, production build output
+  - 37 tests
+
+## [1.0.0] - 2026-08-08
+
+### Added
+- Enterprise features module
+  - Authentication: User, APIKey (hashed), AuthContext, APIKeyManager
+  - RBAC: Permission enum (14 permissions), Role with inheritance, RoleManager
+  - Audit: AuditEvent, AuditEventType (15 types), AuditLogger with query and export
+  - Rate limiting: token bucket + sliding window, per-identifier tracking
+  - 71 tests
+- VSCode extension (TypeScript)
+  - 10 commands, 2 sidebar views, 6 config settings, keybindings
+  - API client, task tree provider, status bar, webview results panel
+  - Auto-connect, auto-verify on save
+  - 35 tests
+
+## [0.9.0] - 2026-08-08
+
+### Added
+- Model fine-tuning pipeline
+  - FineTuningJob with 5 methods (full, lora, qlora, dpo, ppo)
+  - JobOrchestrator with custom executors
+  - DatasetVersionManager with content hashing and deduplication
+  - ModelComparisonHarness for A/B comparison with per-task and aggregate deltas
+  - 44 tests
+
+## [0.8.0] - 2026-08-08
+
+### Added
+- Distributed execution module
+  - TaskQueue ABC: submit, fetch, complete, cancel, list_jobs
+  - InMemoryQueue (thread-safe, priority-ordered)
+  - RedisQueue (JSON serialization, BRPOP/LPUSH, graceful fallback)
+  - Worker with background thread, handler registration, stats
+  - DistributedBenchmarkRunner for parallel benchmark execution
+  - 40 tests
+
+## [0.7.0] - 2026-08-08
+
+### Added
+- Multi-language support
+  - LanguageAdapter ABC: syntax_check, build, run_tests, lint, type_check
+  - LanguageRegistry with detection from files and repos
+  - Adapters: Python, Go, Rust, TypeScript, Java
+  - MultiLanguageVerificationRunner for pipeline integration
+  - 59 tests
+
+## [0.6.0] - 2026-08-08
+
+### Added
+- Plugin system
+  - Plugin ABCs: VerifierPlugin, RetrieverPlugin, CriticPlugin
+  - PluginRegistry with entry point discovery
+  - Built-in plugins: FileSizeVerifier, ImportCheckerVerifier, GitLogRetriever, MinimalityCritic, SecurityCritic
+  - 42 tests
 
 ## [0.5.0] - 2024-01-01
 

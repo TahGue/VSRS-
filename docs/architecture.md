@@ -261,4 +261,44 @@ BenchmarkSet ──▶ BenchmarkRunner ──▶ EvaluationReport
 | `vsrs.llm` | LLM client, cost tracking, prompt rendering, reasoners |
 | `vsrs.training` | Trajectory export, filters, dataset builder |
 | `vsrs.eval` | Benchmark tasks, scorer, reports, ablations, runner |
+| `vsrs.plugins` | Plugin ABCs, registry, built-in verifiers/retrievers/critics |
+| `vsrs.languages` | Multi-language adapters (Python, Go, Rust, TypeScript, Java) |
+| `vsrs.distributed` | Task queues (in-memory, Redis), workers, distributed benchmark runner |
+| `vsrs.finetuning` | Fine-tuning jobs, dataset versioning, model comparison harness |
+| `vsrs.enterprise` | Auth, RBAC, audit logging, rate limiting |
 | `vsrs.cli` | Command-line interface |
+
+## VSCode Extension
+
+TypeScript extension providing IDE integration:
+
+```
+Editor ──▶ VSRSApiClient ──▶ FastAPI Server
+               │
+    ┌──────────┼──────────┐
+    ▼          ▼          ▼
+ TaskTree   StatusBar   ResultsPanel
+ Provider   Manager     (Webview)
+```
+
+- **Location**: `vscode-extension/`
+- **Commands**: 10 (run, verify, repair, benchmark, connect, disconnect, refresh, view results, cancel, settings)
+- **Keybindings**: `Ctrl+Shift+V` (verify), `Ctrl+Shift+R` (repair)
+
+## Web Dashboard
+
+React-based dashboard for visual run management:
+
+```
+Browser ──▶ React App ──▶ FastAPI Server
+               │
+    ┌──────────┼──────────┐
+    ▼          ▼          ▼
+ RunsPage   Benchmarks   Settings
+ (list +    Page         Page
+  detail)
+```
+
+- **Location**: `web-dashboard/`
+- **Tech**: React 18, Vite 5, React Router 6, Lucide icons
+- **Theme**: Dark, GitHub-inspired
