@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.7.0] - 2026-08-08
+
+### Added
+- Documentation & integration polish
+  - User guide: 3 new sections (multi-tenant, SSO, worker pool & auto-scaling)
+  - Updated TOC, install instructions (tree-sitter optional dep), API endpoints (WebSocket)
+  - Integration tests: 14 cross-module tests covering tenant+pool, SSO+enterprise,
+    tenant+SSO, pool+queue, and full end-to-end enterprise workflow
+  - 1191 total tests
+
+
 ## [1.6.0] - 2026-08-08
 
 ### Added

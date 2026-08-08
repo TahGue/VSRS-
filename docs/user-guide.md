@@ -20,8 +20,11 @@ This guide explains how to install, configure, and use the Verified Software Rea
 12. [Distributed Execution](#12-distributed-execution)
 13. [Fine-Tuning Pipeline](#13-fine-tuning-pipeline)
 14. [Enterprise Features](#14-enterprise-features)
-15. [Plugin System](#15-plugin-system)
-16. [Troubleshooting](#16-troubleshooting)
+15. [Multi-Tenant Project Isolation](#15-multi-tenant-project-isolation)
+16. [SSO Integration](#16-sso-integration)
+17. [Worker Pool & Auto-Scaling](#17-worker-pool--auto-scaling)
+18. [Plugin System](#18-plugin-system)
+19. [Troubleshooting](#19-troubleshooting)
 
 ---
 
@@ -53,8 +56,11 @@ pip install -e ".[llm]"
 # For LLM integration (Anthropic)
 pip install -e ".[llm-anthropic]"
 
+# For tree-sitter multi-language indexing
+pip install -e ".[tree-sitter]"
+
 # For everything
-pip install -e ".[dev,api,llm,llm-anthropic]"
+pip install -e ".[dev,api,llm,llm-anthropic,tree-sitter]"
 ```
 
 ### Verify installation
@@ -393,6 +399,7 @@ python -m uvicorn vsrs.api.app:app --port 8000
 | `GET` | `/api/v1/runs/{run_id}/report` | Get full report (markdown) |
 | `GET` | `/api/v1/config` | Get configuration |
 | `GET` | `/api/v1/benchmarks` | List benchmarks |
+| `WS` | `/ws/runs/{run_id}` | Real-time progress streaming |
 
 ### Example: Create a run via API
 
@@ -631,6 +638,10 @@ for w in workers:
     w.stop()
 ```
 
+### Worker pool with resource allocation
+
+For production use, see [Section 17: Worker Pool & Auto-Scaling](#17-worker-pool--auto-scaling) for resource-aware scheduling, auto-scaling, and health monitoring.
+
 ---
 
 ## 13. Fine-Tuning Pipeline
@@ -742,7 +753,285 @@ if not result.allowed:
 
 ---
 
-## 15. Plugin System
+## 15. Multi-Tenant Project Isolation
+
+VSRS supports multi-tenant isolation, allowing multiple teams to share a single VSRS instance with isolated projects and configurable resource quotas.
+
+### Creating tenants
+
+```python
+from vsrs.enterprise import TenantManager, ResourceQuota
+
+mgr = TenantManager()
+
+tenant = mgr.create_tenant(
+    tenant_id="acme",
+    name="Acme Corporation",
+    slug="acme",
+    quota=ResourceQuota(
+        max_projects=20,
+        max_runs_per_day=500,
+        max_concurrent_runs=10,
+        max_storage_mb=10240,
+        max_api_keys=20,
+    ),
+)
+```
+
+### Managing projects
+
+```python
+# Create a project within a tenant
+project = mgr.create_project(
+    project_id="web-app",
+    tenant_id="acme",
+    name="Web Application",
+    repo_root="/repos/acme/web-app",
+)
+
+# List all projects for a tenant
+projects = mgr.list_projects("acme")
+
+# Delete a project
+mgr.delete_project("web-app")
+```
+
+### Resource quotas
+
+Quotas limit resource consumption per tenant:
+
+| Resource | Default | Description |
+|----------|---------|-------------|
+| `max_projects` | 10 | Maximum number of projects |
+| `max_runs_per_day` | 100 | Maximum runs per day |
+| `max_concurrent_runs` | 5 | Maximum concurrent runs |
+| `max_storage_mb` | 1024 | Maximum storage in MB |
+| `max_api_keys` | 10 | Maximum API keys |
+
+Use `ResourceQuota.unlimited()` for no limits (-1 values).
+
+### Quota enforcement
+
+```python
+# Check if a run is allowed
+mgr.check_run_allowed("acme")  # Raises QuotaExceededError if over quota
+
+# Record run start/end
+mgr.record_run_start("acme")
+mgr.record_run_end("acme")
+
+# Check storage
+mgr.check_storage_allowed("acme", additional_mb=50)
+
+# Get usage summary
+summary = mgr.get_usage_summary("acme")
+print(summary["limits"]["runs_today"]["remaining"])
+```
+
+### Tenant lifecycle
+
+```python
+# Suspend a tenant
+mgr.suspend_tenant("acme")
+
+# Reactivate
+mgr.reactivate_tenant("acme")
+
+# Delete (removes all projects)
+mgr.delete_tenant("acme")
+```
+
+---
+
+## 16. SSO Integration
+
+VSRS supports SAML 2.0 and OpenID Connect (OIDC) for enterprise single sign-on.
+
+### Registering providers
+
+**SAML provider**:
+```python
+from vsrs.enterprise import SSOManager, SAMLProvider
+
+sso = SSOManager()
+sso.register_saml_provider(SAMLProvider(
+    id="okta",
+    name="Okta",
+    entity_id="https://okta.com/entity",
+    sso_url="https://okta.com/sso",
+    slo_url="https://okta.com/slo",
+    x509_cert="-----BEGIN CERTIFICATE-----...",
+    audience="vsrs",
+))
+```
+
+**OIDC provider**:
+```python
+from vsrs.enterprise import SSOManager, OIDCProvider
+
+sso = SSOManager()
+sso.register_oidc_provider(OIDCProvider(
+    id="google",
+    name="Google",
+    issuer_url="https://accounts.google.com",
+    client_id="your-client-id",
+    client_secret="your-secret",
+    authorize_url="https://accounts.google.com/o/oauth2/auth",
+    token_url="https://oauth2.googleapis.com/token",
+    userinfo_url="https://www.googleapis.com/oauth2/v2/userinfo",
+    scopes=["openid", "email", "profile"],
+))
+```
+
+### OIDC authentication flow
+
+```python
+# 1. Redirect user to authorize URL
+url = sso.get_oidc_authorize_url("google", redirect_uri="https://vsrs.local/callback")
+
+# 2. After callback, validate the ID token and create a session
+session = sso.authenticate_oidc("google", id_token="eyJ...", userinfo=userinfo_dict)
+print(session.user_id)
+print(session.token)  # Use this token for subsequent requests
+```
+
+### SAML authentication flow
+
+```python
+# 1. Redirect user to SAML SSO URL
+url = sso.get_saml_redirect_url("okta", relay_state="return_to=/dashboard")
+
+# 2. After callback, validate the SAML response
+session = sso.authenticate_saml("okta", saml_response=base64_encoded_response)
+```
+
+### Session management
+
+```python
+# Get session by token
+session = sso.get_session(token)
+
+# Refresh session (extend by 8 hours)
+sso.refresh_session(session.id, extend_hours=8)
+
+# Logout
+sso.logout(token)
+
+# Cleanup expired sessions
+removed = sso.cleanup_expired_sessions()
+```
+
+### Automatic user provisioning
+
+Users are automatically provisioned from IdP attributes on first login. Subsequent logins update the user's profile.
+
+```python
+users = sso.list_users()
+print(f"{sso.user_count} users provisioned")
+```
+
+---
+
+## 17. Worker Pool & Auto-Scaling
+
+VSRS provides a worker pool with resource-aware scheduling and auto-scaling for distributed verification.
+
+### Creating a worker pool
+
+```python
+from vsrs.distributed import WorkerPool, PoolConfig, ResourceSpec
+
+pool = WorkerPool(
+    queue=InMemoryQueue(),
+    config=PoolConfig(
+        min_workers=2,
+        max_workers=20,
+        scale_up_threshold=5,
+        scale_down_threshold=0,
+        health_check_interval=10.0,
+        heartbeat_timeout=60.0,
+        default_worker_capacity=ResourceSpec(cpu=4.0, memory_mb=4096),
+    ),
+)
+```
+
+### Adding workers with custom capacity
+
+```python
+# Small worker for lightweight tasks
+pool.add_worker(
+    worker_id="small-1",
+    capacity=ResourceSpec(cpu=1.0, memory_mb=512),
+    handlers={"test": lambda job: {"result": "ok"}},
+)
+
+# Large worker with GPU for heavy verification
+pool.add_worker(
+    worker_id="gpu-1",
+    capacity=ResourceSpec(cpu=8.0, memory_mb=16384, gpu=1),
+)
+```
+
+### Resource-aware job scheduling
+
+```python
+from vsrs.distributed import TaskJob, ResourceSpec
+
+job = TaskJob(id="job-1", task_type="verify", payload={"file": "main.py"})
+
+# Submit with resource requirements
+pool.submit_job(job, resources=ResourceSpec(cpu=2.0, memory_mb=2048))
+
+# Process synchronously on a capable worker
+result = pool.process_job_on_worker(job, resources=ResourceSpec(cpu=2.0, memory_mb=2048))
+```
+
+### Auto-scaling
+
+The pool automatically scales up when queue depth exceeds `scale_up_threshold` and scales down when workers are idle:
+
+```python
+# Start the pool with auto-scaling
+pool.start()
+
+# The pool maintains min_workers and scales up to max_workers
+print(pool.pool_stats())
+
+# Stop gracefully (drains workers)
+pool.stop()
+```
+
+### Health monitoring
+
+Workers send heartbeats to indicate they're alive. Unhealthy workers are automatically replaced:
+
+```python
+# Record a heartbeat
+pool.heartbeat("worker-1")
+
+# Pool stats include health info
+stats = pool.pool_stats()
+print(f"Unhealthy: {stats['unhealthy_count']}")
+```
+
+### Pool statistics
+
+```python
+stats = pool.pool_stats()
+# {
+#   "worker_count": 5,
+#   "idle_count": 3,
+#   "busy_count": 2,
+#   "unhealthy_count": 0,
+#   "queue_size": 1,
+#   "total_capacity": {"cpu": 20.0, "memory_mb": 20480, ...},
+#   "total_available": {"cpu": 16.0, "memory_mb": 16384, ...},
+# }
+```
+
+---
+
+## 18. Plugin System
 
 VSRS supports custom plugins for verification, retrieval, and criticism.
 
@@ -797,7 +1086,7 @@ my-verifier = "my_package:MyVerifier"
 
 ---
 
-## 16. Troubleshooting
+## 19. Troubleshooting
 
 ### "ModuleNotFoundError: No module named 'vsrs'"
 
@@ -867,5 +1156,6 @@ VSRS is a complete platform for evidence-grounded code reasoning and verificatio
 3. **VSRS reasons, patches, verifies, repairs, and reviews**
 4. **Inspect results** (CLI, API, web dashboard, or VSCode)
 5. **Benchmark, evaluate, and fine-tune** your models
-6. **Scale** with distributed execution
-7. **Secure** with enterprise auth, RBAC, audit, and rate limiting
+6. **Scale** with distributed execution and worker pool auto-scaling
+7. **Secure** with enterprise auth, RBAC, audit, rate limiting, multi-tenancy, and SSO
+8. **Isolate** teams with multi-tenant project isolation and resource quotas
