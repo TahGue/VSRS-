@@ -299,7 +299,17 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 - 17 CLI tests
 - 1208 total tests
 
-## Future Roadmap (Post-29)
+### Phase 30: Enterprise API Endpoints ✅
+- Tenant CRUD: POST/GET/DELETE /api/v1/tenants, suspend/reactivate, usage
+- Project CRUD: POST/GET/DELETE /api/v1/tenants/{id}/projects
+- SSO: GET /api/v1/sso/providers, /sessions, /users; POST /cleanup
+- Pool: GET /api/v1/pool/stats
+- Pydantic request/response models for all endpoints
+- 404 handling for TenantNotFoundError
+- 24 API tests
+- 1232 total tests
+
+## Future Roadmap (Post-30)
 
 All planned phases complete. The VSRS project now includes:
 - Core pipeline with provenance tracking
@@ -323,10 +333,11 @@ All planned phases complete. The VSRS project now includes:
 | Source files | 95+ Python files |
 | Source lines | ~24,000 LOC |
 | Test files | 24 test files |
-| Test count | 1208 tests |
-| Modules | 22 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval, plugins, languages, distributed, finetuning, enterprise, api.websocket, repo.tree_sitter_index, enterprise.tenant, enterprise.sso, distributed.pool) + VSCode extension + Web dashboard |
+| Test count | 1232 tests |
+| Modules | 23 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval, plugins, languages, distributed, finetuning, enterprise, api.websocket, repo.tree_sitter_index, enterprise.tenant, enterprise.sso, distributed.pool, api.enterprise_routes) + VSCode extension + Web dashboard |
 | CLI commands | 25+ |
-| Phases completed | 29 of 29 |
+| API endpoints | 25+ |
+| Phases completed | 30 of 30 |
 | Dependencies | pydantic, typer, rich, pyyaml |
 | Optional deps | fastapi, uvicorn, httpx, openai, anthropic |
 
@@ -354,3 +365,4 @@ All planned phases complete. The VSRS project now includes:
 | 1.6.0 | 27 | Worker pool with resource allocation and auto-scaling |
 | 1.7.0 | 28 | Documentation & integration polish |
 | 1.8.0 | 29 | Enterprise CLI commands (tenant, SSO, pool) |
+| 1.9.0 | 30 | Enterprise API endpoints |

@@ -421,6 +421,21 @@ python -m uvicorn vsrs.api.app:app --port 8000
 | `GET` | `/api/v1/config` | Get configuration |
 | `GET` | `/api/v1/benchmarks` | List benchmarks |
 | `WS` | `/ws/runs/{run_id}` | Real-time progress streaming |
+| `POST` | `/api/v1/tenants` | Create a tenant |
+| `GET` | `/api/v1/tenants` | List all tenants |
+| `GET` | `/api/v1/tenants/{id}` | Get tenant details |
+| `GET` | `/api/v1/tenants/{id}/usage` | Get tenant resource usage |
+| `POST` | `/api/v1/tenants/{id}/suspend` | Suspend a tenant |
+| `POST` | `/api/v1/tenants/{id}/reactivate` | Reactivate a tenant |
+| `DELETE` | `/api/v1/tenants/{id}` | Delete a tenant |
+| `POST` | `/api/v1/tenants/{id}/projects` | Create a project |
+| `GET` | `/api/v1/tenants/{id}/projects` | List tenant projects |
+| `DELETE` | `/api/v1/tenants/{id}/projects/{pid}` | Delete a project |
+| `GET` | `/api/v1/sso/providers` | List SSO providers |
+| `GET` | `/api/v1/sso/sessions` | List active SSO sessions |
+| `GET` | `/api/v1/sso/users` | List SSO-provisioned users |
+| `POST` | `/api/v1/sso/cleanup` | Remove expired SSO sessions |
+| `GET` | `/api/v1/pool/stats` | Get worker pool statistics |
 
 ### Example: Create a run via API
 

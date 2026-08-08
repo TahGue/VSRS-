@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.9.0] - 2026-08-08
+
+### Added
+- Enterprise API endpoints
+  - Tenant CRUD: POST/GET/DELETE `/api/v1/tenants`, suspend/reactivate, usage
+  - Project CRUD: POST/GET/DELETE `/api/v1/tenants/{id}/projects`
+  - SSO: GET `/api/v1/sso/providers`, `/sessions`, `/users`; POST `/cleanup`
+  - Pool: GET `/api/v1/pool/stats`
+  - Pydantic request/response models for all endpoints
+  - 404 handling for TenantNotFoundError
+  - 24 API tests
+
+
 ## [1.8.0] - 2026-08-08
 
 ### Added

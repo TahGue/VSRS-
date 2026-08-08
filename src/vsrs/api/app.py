@@ -6,6 +6,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from vsrs.api.routes import router
+from vsrs.api.enterprise_routes import router as enterprise_router
 from vsrs.api.websocket import manager as ws_manager
 from vsrs.core.logging import get_logger
 
@@ -31,6 +32,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(router, prefix="/api/v1")
+    app.include_router(enterprise_router, prefix="/api/v1")
 
     @app.get("/health")
     async def health() -> dict[str, str]:
