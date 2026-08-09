@@ -10,9 +10,9 @@ database:
 
 model:
   provider: lmstudio
-  model_name: ""  # auto-detect from LM Studio
+  model_name: "qwen3.5-9b-mtp"
   base_url: http://localhost:1234/v1
-  max_tokens: 4096
+  max_tokens: 8192
   temperature: 0.2
 
 sandbox:

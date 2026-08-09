@@ -170,8 +170,15 @@ class OpenAIClient:
         choice = response.choices[0]
         usage = response.usage
 
+        # For thinking/reasoning models (e.g. Qwen3.5), content may be empty
+        # and the actual output is in reasoning_content. Fall back to it.
+        text = choice.message.content or ""
+        if not text:
+            raw_msg = choice.message.model_dump() if hasattr(choice.message, "model_dump") else {}
+            text = raw_msg.get("reasoning_content", "") or ""
+
         result = LLMResponse(
-            text=choice.message.content or "",
+            text=text,
             model=self.model,
             input_tokens=usage.prompt_tokens if usage else 0,
             output_tokens=usage.completion_tokens if usage else 0,

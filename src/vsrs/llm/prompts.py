@@ -214,6 +214,89 @@ def parse_structured_output(
     return model_class.model_validate(data)
 
 
+def _preprocess_reasoning_data(data: dict[str, Any]) -> dict[str, Any]:
+    """Fix common LLM output issues before Pydantic validation.
+
+    Handles:
+    - String fields that should be lists (constraints, risk_factors, etc.)
+    - Missing diff in patch_proposal (construct from changed_files/new content)
+    - Missing rationale in patch_proposal
+    - Missing required fields with sensible defaults
+    """
+    # Fix parsed_task: ensure list fields are lists
+    pt = data.get("parsed_task", {})
+    if isinstance(pt, dict):
+        for key in ("constraints", "acceptance_criteria", "risk_factors", "affected_areas"):
+            if key in pt and isinstance(pt[key], str):
+                pt[key] = [pt[key]]
+        data["parsed_task"] = pt
+
+    # Fix evidence_summary: ensure list fields are lists
+    es = data.get("evidence_summary", {})
+    if isinstance(es, dict):
+        for key in ("relevant_symbols", "relevant_files", "relevant_tests",
+                     "relevant_configs", "key_observations", "evidence_locators"):
+            if key in es and isinstance(es[key], str):
+                es[key] = [es[key]]
+        data["evidence_summary"] = es
+
+    # Fix predicted_effects: ensure list fields are lists
+    pe = data.get("predicted_effects", {})
+    if isinstance(pe, dict):
+        for key in ("files_to_change", "symbols_to_change", "new_symbols",
+                     "behavior_changes", "behavior_preserved", "side_effects"):
+            if key in pe and isinstance(pe[key], str):
+                pe[key] = [pe[key]]
+        data["predicted_effects"] = pe
+
+    # Fix falsification_plan: ensure list fields are lists
+    fp = data.get("falsification_plan", {})
+    if isinstance(fp, dict):
+        for key in ("checks", "new_tests_needed", "existing_tests_to_run", "edge_cases"):
+            if key in fp and isinstance(fp[key], str):
+                fp[key] = [fp[key]]
+        data["falsification_plan"] = fp
+
+    # Fix patch_proposal: ensure diff exists, list fields are lists
+    pp = data.get("patch_proposal", {})
+    if isinstance(pp, dict):
+        for key in ("changed_files", "changed_symbols", "new_files", "new_tests", "assumptions"):
+            if key in pp and isinstance(pp[key], str):
+                pp[key] = [pp[key]]
+
+        # If diff is missing, try to construct from new_content or code fields
+        if "diff" not in pp or not pp.get("diff"):
+            # Check for alternative field names LLMs might use
+            diff = pp.get("diff", "") or pp.get("unified_diff", "") or pp.get("patch", "")
+            if not diff:
+                # Try to construct from new_content/code fields
+                for file_key in ("new_content", "code", "content", "file_content"):
+                    if file_key in pp and pp[file_key]:
+                        changed = pp.get("changed_files", ["unknown"])
+                        fname = changed[0] if isinstance(changed, list) and changed else "unknown"
+                        new_content = pp[file_key]
+                        if isinstance(new_content, dict):
+                            # might be {filename: content}
+                            for fn, content in new_content.items():
+                                diff += f"--- a/{fn}\n+++ b/{fn}\n@@ -0,0 +1,{content.count(chr(10))+1} @@\n"
+                                for line in content.split("\n"):
+                                    diff += f"+{line}\n"
+                        elif isinstance(new_content, str):
+                            diff += f"--- a/{fname}\n+++ b/{fname}\n"
+                            for line in new_content.split("\n"):
+                                diff += f"+{line}\n"
+                        break
+            pp["diff"] = diff or ""
+
+        # Ensure rationale exists
+        if "rationale" not in pp or not pp.get("rationale"):
+            pp["rationale"] = pp.get("rationale", "") or pp.get("explanation", "") or "LLM-generated patch"
+
+        data["patch_proposal"] = pp
+
+    return data
+
+
 def parse_reasoning_output(text: str) -> ReasoningOutput:
     """Parse an LLM response into a ReasoningOutput.
 
@@ -227,7 +310,10 @@ def parse_reasoning_output(text: str) -> ReasoningOutput:
         ValueError: If JSON extraction or parsing fails.
         ValidationError: If validation fails.
     """
-    return parse_structured_output(text, ReasoningOutput)
+    json_str = extract_json(text)
+    data = json.loads(json_str)
+    data = _preprocess_reasoning_data(data)
+    return ReasoningOutput.model_validate(data)
 
 
 def parse_repair_output(text: str) -> RepairOutput:

@@ -37,7 +37,7 @@ console = Console()
 
 
 def _get_config() -> VSRSConfig:
-    config = VSRSConfig.default()
+    config = VSRSConfig.load()
     config.ensure_dirs()
     setup_logging(level=config.log_level, log_dir=config.log_dir)
     return config

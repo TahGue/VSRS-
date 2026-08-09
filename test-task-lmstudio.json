@@ -1,0 +1,7 @@
+{
+  "instruction": "Add a function called `greet(name)` that returns 'Hello, {name}!' to the utils.py file",
+  "acceptance_criteria": [
+    "greet function exists in utils.py",
+    "greet('World') returns 'Hello, World!'"
+  ]
+}
