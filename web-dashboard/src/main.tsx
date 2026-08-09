@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import App from './App';
+import DashboardPage from './pages/DashboardPage';
 import RunsPage from './pages/RunsPage';
 import RunDetailPage from './pages/RunDetailPage';
 import BenchmarksPage from './pages/BenchmarksPage';
@@ -14,6 +15,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <Routes>
         <Route path="/" element={<App />}>
           <Route index element={<RunsPage />} />
+          <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="runs" element={<RunsPage />} />
           <Route path="runs/:runId" element={<RunDetailPage />} />
           <Route path="benchmarks" element={<BenchmarksPage />} />
           <Route path="settings" element={<SettingsPage />} />

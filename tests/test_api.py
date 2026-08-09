@@ -191,7 +191,7 @@ class TestRuns:
         assert "runs" in data
         assert "total" in data
         assert data["total"] >= 1
-        assert any(r["id"] == run_id for r in data["runs"])
+        assert any(r["run_id"] == run_id for r in data["runs"])
 
     def test_list_runs_pagination(self, client):
         _seed_store(client._db_path)

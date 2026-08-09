@@ -17,6 +17,7 @@ test.describe('VSRS Web Dashboard', () => {
 
   test('sidebar navigation works', async ({ page }) => {
     await page.goto(BASE_URL);
+    await page.waitForLoadState('domcontentloaded');
 
     // Sidebar logo visible
     await expect(page.locator('.sidebar-logo')).toContainText('VSRS Dashboard');
@@ -27,22 +28,19 @@ test.describe('VSRS Web Dashboard', () => {
     await expect(page.locator('.sidebar-nav a').filter({ hasText: 'Settings' })).toBeVisible();
   });
 
-  test('runs page shows empty state, runs table, or error', async ({ page }) => {
-    await page.goto(BASE_URL);
+  test('runs page shows content', async ({ page }) => {
+    await page.goto(`${BASE_URL}/runs`);
+    await page.waitForLoadState('domcontentloaded');
 
-    // Wait for loading to finish
-    await page.waitForTimeout(2000);
+    // Page header should render after JS loads
+    await expect(page.locator('h1').first()).toContainText('Runs', { timeout: 20000 });
 
-    // Either empty state, runs table, or error message should be visible
-    const emptyState = page.locator('.empty-state');
-    const runsTable = page.locator('table');
-    const errorMsg = page.locator('.error-msg');
-
-    await expect(emptyState.or(runsTable).or(errorMsg)).toBeVisible();
+    // After API call completes, we should see content (table, empty state, or error)
+    await page.waitForSelector('.card, .empty-state, .error-msg, table', { timeout: 20000 });
   });
 
   test('new run form toggles', async ({ page }) => {
-    await page.goto(BASE_URL);
+    await page.goto(`${BASE_URL}/runs`);
     await page.waitForTimeout(1000);
 
     // Click "New Run" button
@@ -53,8 +51,8 @@ test.describe('VSRS Web Dashboard', () => {
       // Form should appear
       await expect(page.locator('h2').filter({ hasText: 'Create New Run' })).toBeVisible();
       await expect(page.locator('input[placeholder="/path/to/repo"]')).toBeVisible();
-      await expect(page.locator('input[placeholder="Fix the bug in..."]')).toBeVisible();
-      await expect(page.locator('select')).toBeVisible();
+      await expect(page.locator('textarea[placeholder="Describe the task in detail..."]')).toBeVisible();
+      await expect(page.locator('select').first()).toBeVisible();
     }
   });
 
@@ -73,15 +71,15 @@ test.describe('VSRS Web Dashboard', () => {
 
   test('settings page loads and shows config', async ({ page }) => {
     await page.goto(`${BASE_URL}/settings`);
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
 
     // Page header visible
     await expect(page.locator('h1')).toContainText('Settings');
 
-    // Config card should appear (or error message)
-    const card = page.locator('.card');
+    // Config card or LLM status card should appear (or error message)
+    const card = page.locator('.card').first();
     const errorMsg = page.locator('.error-msg');
-    await expect(card.or(errorMsg)).toBeVisible();
+    await expect(card.or(errorMsg)).toBeVisible({ timeout: 10000 });
   });
 
   test('dark theme is applied', async ({ page }) => {

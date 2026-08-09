@@ -5,6 +5,9 @@ export interface Run {
   started_at: string;
   attempt_no: number;
   max_attempts: number;
+  finished_at?: string | null;
+  updated_at?: string | null;
+  final_decision?: any;
 }
 
 export interface Task {
@@ -42,8 +45,30 @@ export interface Patch {
   assumptions: string[];
 }
 
+export interface EvidenceItem {
+  id: string;
+  type: string;
+  source: string;
+  locator: string;
+  content: string;
+  state: string;
+}
+
 export interface EvidenceResponse {
-  items: any[];
+  items: EvidenceItem[];
+}
+
+export interface Finding {
+  id: string;
+  severity: string;
+  category: string;
+  message: string;
+  detail?: string;
+}
+
+export interface ReviewResponse {
+  findings: Finding[];
+  final_decision: any | null;
 }
 
 export interface ProvenanceResponse {
@@ -61,4 +86,39 @@ export interface ConfigResponse {
   max_attempts: number;
   required_gates: string[];
   [key: string]: any;
+}
+
+export interface StatsResponse {
+  total_runs: number;
+  states: Record<string, number>;
+  verified: number;
+  rejected: number;
+  needs_review: number;
+  failed: number;
+  success_rate: number;
+}
+
+export interface LLMStatus {
+  provider: string;
+  model: string;
+  base_url: string;
+  max_tokens: number;
+  temperature: number;
+}
+
+export interface LLMModelsResponse {
+  provider: string;
+  models: string[];
+  connected: boolean;
+  error?: string;
+}
+
+export interface RunEvent {
+  id: string;
+  run_id: string;
+  task_id: string;
+  state: string;
+  event_type: string;
+  payload: any;
+  timestamp: string;
 }

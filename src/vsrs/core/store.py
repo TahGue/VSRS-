@@ -316,6 +316,30 @@ class Store:
         )
         self._conn.commit()
 
+    def delete_run(self, run_id: str) -> None:
+        """Delete a run and its related data."""
+        run = self.get_run(run_id)
+        if not run:
+            return
+        # Delete events
+        self._conn.execute("DELETE FROM run_events WHERE run_id = ?", (run_id,))
+        # Delete final decision
+        self._conn.execute("DELETE FROM final_decisions WHERE task_id = ?", (run.task_id,))
+        # Delete findings for patches of this task
+        patches = self.get_patches_for_task(run.task_id)
+        for patch in patches:
+            self._conn.execute("DELETE FROM critic_findings WHERE patch_id = ?", (patch.id,))
+            self._conn.execute("DELETE FROM verification_reports WHERE patch_id = ?", (patch.id,))
+            self._conn.execute("DELETE FROM patches WHERE id = ?", (patch.id,))
+        # Delete evidence
+        self._conn.execute("DELETE FROM evidence_items WHERE task_id = ?", (run.task_id,))
+        # Delete provenance edges
+        self._conn.execute("DELETE FROM provenance_edges WHERE source = ? OR target = ?",
+                           (run_id, run_id))
+        # Delete the run
+        self._conn.execute("DELETE FROM task_runs WHERE id = ?", (run_id,))
+        self._conn.commit()
+
     def get_run(self, run_id: str) -> TaskRun | None:
         row = self._conn.execute(
             "SELECT * FROM task_runs WHERE id = ?", (run_id,)

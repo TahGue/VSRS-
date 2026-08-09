@@ -59,21 +59,15 @@ def create_app() -> FastAPI:
     if dashboard_dist.exists():
         app.mount("/assets", StaticFiles(directory=dashboard_dist / "assets"), name="assets")
 
-        @app.get("/")
-        async def dashboard_root() -> FileResponse:
+        def _spa():
             return FileResponse(dashboard_dist / "index.html")
 
-        @app.get("/runs/{run_id}")
-        async def dashboard_run() -> FileResponse:
-            return FileResponse(dashboard_dist / "index.html")
-
-        @app.get("/benchmarks")
-        async def dashboard_benchmarks() -> FileResponse:
-            return FileResponse(dashboard_dist / "index.html")
-
-        @app.get("/settings")
-        async def dashboard_settings() -> FileResponse:
-            return FileResponse(dashboard_dist / "index.html")
+        app.get("/")(_spa)
+        app.get("/dashboard")(_spa)
+        app.get("/runs")(_spa)
+        app.get("/runs/{run_id}")(_spa)
+        app.get("/benchmarks")(_spa)
+        app.get("/settings")(_spa)
 
         logger.info(f"Web dashboard served from {dashboard_dist}")
 

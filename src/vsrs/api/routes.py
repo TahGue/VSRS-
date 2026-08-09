@@ -63,7 +63,19 @@ def list_runs(
     runs = store.list_all_runs(limit=limit, offset=offset)
     total = store.count_runs()
     return RunListResponse(
-        runs=[r.model_dump(mode="json") for r in runs],
+        runs=[
+            {
+                "run_id": r.id,
+                "task_id": r.task_id,
+                "state": r.state.value,
+                "started_at": str(r.started_at),
+                "attempt_no": r.attempt_no,
+                "max_attempts": r.max_attempts,
+                "finished_at": str(r.finished_at) if r.finished_at else None,
+                "updated_at": str(r.updated_at) if r.updated_at else None,
+            }
+            for r in runs
+        ],
         total=total,
         offset=offset,
         limit=limit,
@@ -152,6 +164,22 @@ def get_run(run_id: str, store: Store = Depends(get_store)) -> RunResponse:
         attempt_no=run.attempt_no,
         max_attempts=run.max_attempts,
     )
+
+
+@router.delete("/runs/{run_id}")
+def delete_run(run_id: str, store: Store = Depends(get_store)) -> dict:
+    """Delete a run and its associated data."""
+    run = _require_run(store, run_id)
+    store.delete_run(run_id)
+    return {"deleted": True, "run_id": run_id}
+
+
+@router.get("/runs/{run_id}/events")
+def get_run_events(run_id: str, store: Store = Depends(get_store)) -> dict:
+    """Get events for a run."""
+    _require_run(store, run_id)
+    events = store.get_events_for_run(run_id)
+    return {"events": [e.model_dump(mode="json") for e in events], "total": len(events)}
 
 
 @router.get("/runs/{run_id}/task", response_model=TaskResponse)
@@ -370,3 +398,70 @@ def list_benchmarks() -> BenchmarkListResponse:
             for t in tasks
         ]
     )
+
+
+# --- LLM ---
+
+
+@router.get("/llm/models")
+def list_llm_models(config: VSRSConfig = Depends(get_config)) -> dict:
+    """List available LLM models from the configured provider."""
+    provider = config.model.provider
+    if provider in ("stub", "", None):
+        return {"provider": "stub", "models": [], "connected": True}
+    try:
+        from vsrs.llm.client import create_client
+        client = create_client(
+            provider=provider,
+            model=config.model.model_name or None,
+            base_url=config.model.base_url,
+        )
+        if hasattr(client, "list_models"):
+            models = client.list_models()
+        else:
+            models = []
+        return {"provider": provider, "models": models, "connected": len(models) > 0}
+    except Exception as e:
+        return {"provider": provider, "models": [], "connected": False, "error": str(e)}
+
+
+@router.get("/llm/status")
+def llm_status(config: VSRSConfig = Depends(get_config)) -> dict:
+    """Get LLM provider status."""
+    provider = config.model.provider
+    base_url = config.model.base_url
+    model_name = config.model.model_name
+    return {
+        "provider": provider,
+        "model": model_name,
+        "base_url": base_url,
+        "max_tokens": config.model.max_tokens,
+        "temperature": config.model.temperature,
+    }
+
+
+# --- Stats ---
+
+
+@router.get("/stats")
+def get_stats(store: Store = Depends(get_store)) -> dict:
+    """Get dashboard statistics."""
+    total_runs = store.count_runs()
+    all_runs = store.list_all_runs(limit=1000, offset=0)
+    states: dict[str, int] = {}
+    for run in all_runs:
+        state = run.state.value
+        states[state] = states.get(state, 0) + 1
+    verified = states.get("verified", 0)
+    rejected = states.get("rejected", 0)
+    needs_review = states.get("needs_review", 0)
+    failed = states.get("failed", 0)
+    return {
+        "total_runs": total_runs,
+        "states": states,
+        "verified": verified,
+        "rejected": rejected,
+        "needs_review": needs_review,
+        "failed": failed,
+        "success_rate": round(verified / total_runs * 100, 1) if total_runs > 0 else 0,
+    }

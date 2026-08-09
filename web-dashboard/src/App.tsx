@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from 'react-router-dom';
-import { List, Beaker, Settings, Activity } from 'lucide-react';
+import { LayoutDashboard, List, Beaker, Settings } from 'lucide-react';
 
 export default function App() {
   return (
@@ -7,6 +7,11 @@ export default function App() {
       <aside className="sidebar">
         <div className="sidebar-logo">VSRS Dashboard</div>
         <ul className="sidebar-nav">
+          <li>
+            <NavLink to="/dashboard" className={({ isActive }) => isActive ? 'active' : ''}>
+              <LayoutDashboard size={18} /> Dashboard
+            </NavLink>
+          </li>
           <li>
             <NavLink to="/" end className={({ isActive }) => isActive ? 'active' : ''}>
               <List size={18} /> Runs
