@@ -3,6 +3,7 @@
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests: 1317](https://img.shields.io/badge/tests-1317-brightgreen.svg)](#testing)
+[![Version: 2.6.0](https://img.shields.io/badge/version-2.6.0-blue.svg)](#changelog)
 
 An evidence-grounded coding reasoning model and verification platform. Generated code is a hypothesis, not a fact — the system earns a "verified" status only through evidence: repository grounding, deterministic checks, executable tests, and an auditable provenance trail.
 
@@ -93,7 +94,7 @@ See `vsrs.example.yaml` for all available options.
 | `VSRS_DB_ECHO` | Enable SQL echo logging |
 | `VSRS_LOG_LEVEL` | Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL) |
 | `VSRS_LOG_DIR` | Log directory |
-| `VSRS_MODEL_PROVIDER` | Model provider (openai, anthropic) |
+| `VSRS_MODEL_PROVIDER` | Model provider (stub, openai, anthropic, lmstudio) |
 | `VSRS_MODEL_NAME` | Model name |
 | `VSRS_MODEL_API_KEY_ENV` | Env var name for API key |
 | `VSRS_MODEL_BASE_URL` | Custom API base URL |
@@ -143,9 +144,9 @@ Task Intake
 | **provenance** | `src/vsrs/provenance/` | ProvenanceStore (trace, path, audit), EvidenceGraph, evidence utilities |
 | **eval** | `src/vsrs/eval/` | Benchmark tasks, scorer, ablation configs, evaluation reports |
 | **training** | `src/vsrs/training/` | Trajectory export, quality filters, dataset builders (SFT, repair, preference) |
-| **api** | `src/vsrs/api/` | FastAPI app and routes (stub - Phase 11) |
+| **api** | `src/vsrs/api/` | FastAPI app, REST routes, WebSocket, auth middleware, enterprise routes |
 | **orchestrator** | `src/vsrs/orchestrator.py` | End-to-end pipeline coordinator |
-| **cli** | `src/vsrs/cli.py` | CLI entry point with 15+ commands |
+| **cli** | `src/vsrs/cli.py` | CLI entry point with 42 commands |
 
 ## Design Principles
 
@@ -242,7 +243,7 @@ pytest tests/test_orchestrator.py -v
 ruff check src/ tests/
 ```
 
-**457 tests** across 22 test files covering all modules: core schemas, state machine, store, config, CLI, orchestrator, provenance, reasoning, verification, repair, repo intelligence, eval, and training.
+**1317 tests** across 56 test files covering all modules: core schemas, state machine, store, config, CLI, orchestrator, provenance, reasoning, verification, repair, repo intelligence, eval, training, LLM, plugins, languages, distributed, finetuning, enterprise, API, and WebSocket.
 
 ## Docker
 

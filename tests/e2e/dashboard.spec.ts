@@ -125,7 +125,7 @@ test.describe('VSRS Web Dashboard', () => {
     expect(res.ok()).toBeTruthy();
     const schema = await res.json();
     expect(schema.info.title).toBe('VSRS API');
-    expect(schema.info.version).toBe('2.5.0');
+    expect(schema.info.version).toBe('2.6.0');
   });
 
   test('enterprise endpoints exist in OpenAPI schema', async ({ request }) => {

@@ -371,7 +371,33 @@ This document covers all 15 phases of the VSRS project — all phases are comple
 - 14 Playwright E2E tests + 2 new API tests
 - 1317 total tests
 
-## Future Roadmap (Post-36)
+### Phase 37: Dashboard Overhaul & API Enhancement ✅
+- Dashboard overview page with stats (total/verified/failed/needs_review),
+  success rate, state breakdown with progress bars, LLM provider status,
+  available models list, auto-refresh every 10s
+- Runs page: search by ID/task/state, state filter pills, auto-refresh
+  toggle (5s), delete run with confirmation dialog, formatted dates,
+  truncated run IDs, view/delete actions per row
+- New Run form: risk level selector, acceptance criteria textarea,
+  task type with migration option, multi-line instruction input
+- Run detail: tabbed interface (Overview, Evidence, Patch, Verification,
+  Review, Provenance), auto-refresh during active runs, report download,
+  evidence items with type badges, review findings with severity badges,
+  final decision display
+- Settings page: LLM provider status card (provider, model, base_url,
+  max_tokens, temperature), connection status, available models list,
+  full config display with JSON formatting
+- API: DELETE /runs/{id}, GET /runs/{id}/events, GET /llm/models,
+  GET /llm/status, GET /stats
+- Store: delete_run() with cascade delete (events, patches, findings,
+  verification, evidence, provenance edges)
+- SPA routing: /dashboard, /runs, /benchmarks, /settings serve React
+  dashboard (client-side routing)
+- Bug fix: GET /runs returns run_id (not id) to match dashboard types
+- 16 Playwright E2E tests
+- 1317 total tests
+
+## Future Roadmap (Post-37)
 
 All planned phases complete. The VSRS project now includes:
 - Core pipeline with provenance tracking
@@ -393,16 +419,19 @@ All planned phases complete. The VSRS project now includes:
 
 | Metric | Value |
 |--------|-------|
-| Source files | 95+ Python files |
-| Source lines | ~24,500 LOC |
-| Test count | 1317 Python tests + 14 Playwright E2E tests |
-| Test files | 30 test files + 1 E2E spec |
-| Modules | 24 (core, repo, reasoning, verify, repair, review, provenance, api, llm, training, eval, plugins, languages, distributed, finetuning, enterprise, api.websocket, repo.tree_sitter_index, enterprise.tenant, enterprise.sso, distributed.pool, api.enterprise_routes, api.auth) + VSCode extension + Web dashboard |
-| CLI commands | 43+ |
-| API endpoints | 38+ |
-| Phases completed | 36 of 36 |
+| Source files | 99 Python files |
+| Source lines | 23,375 LOC |
+| Test count | 1317 Python tests + 16 Playwright E2E tests |
+| Test files | 56 test files + 1 E2E spec |
+| Modules | 15 (core, repo, reasoning, verify, repair, provenance, api, llm, training, eval, plugins, languages, distributed, finetuning, enterprise) + 1 sub (reasoning/prompts) + VSCode extension + Web dashboard |
+| CLI commands | 42 |
+| API endpoints | 47 |
+| Phases completed | 37 of 37 |
 | Dependencies | pydantic, typer, rich, pyyaml |
-| Optional deps | fastapi, uvicorn, httpx, openai, anthropic |
+| Optional deps | fastapi, uvicorn, httpx, openai, anthropic, tree-sitter |
+| Web dashboard | 13 files, 1,974 LOC |
+| VSCode extension | 6 TypeScript files |
+| Docs | 16 files |
 
 ---
 
@@ -435,3 +464,4 @@ All planned phases complete. The VSRS project now includes:
 | 2.3.0 | 34 | Rate limiting & RBAC API endpoints |
 | 2.4.0 | 35 | Role & rate limit CLI + API pagination |
 | 2.5.0 | 36 | LM Studio integration, full pipeline wiring, Docker, E2E tests |
+| 2.6.0 | 37 | Dashboard overhaul, API enhancement, SPA routing |

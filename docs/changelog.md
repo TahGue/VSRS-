@@ -8,6 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [2.6.0] - 2026-08-09
+
+### Added
+- Dashboard overview page with run statistics, success rate, state breakdown,
+  LLM provider status, and auto-refresh
+- Runs page: search, state filter, auto-refresh toggle, delete with confirmation
+- New Run form: risk level, acceptance criteria, migration task type
+- Run detail: tabbed interface (Overview, Evidence, Patch, Verification, Review,
+  Provenance), report download, auto-refresh during active runs
+- Settings page: LLM provider status, connection status, model list, config display
+- API: DELETE /runs/{id}, GET /runs/{id}/events, GET /llm/models, GET /llm/status,
+  GET /stats
+- Store: delete_run() with cascade delete
+- SPA routing for all dashboard pages
+- 16 Playwright E2E tests
+
+### Fixed
+- GET /runs returns run_id (not id) to match dashboard types
+- SPA routing serves React app at /dashboard, /runs, /benchmarks, /settings
+
 ## [2.5.0] - 2026-08-08
 
 ### Added
